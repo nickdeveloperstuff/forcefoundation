@@ -86,6 +86,45 @@ Our widget system reduces this to:
 
 ---
 
+## Phoenix LiveView Standards Integration
+
+### Embracing Phoenix LiveView's Component System
+
+This widget system is built on top of Phoenix LiveView's standard components, not as a replacement. Every form widget internally uses the recommended Phoenix components:
+
+- `<.form_widget>` wraps Phoenix's `<.form>`
+- `<.input_widget>` wraps Phoenix's `<.input>`
+- `<.nested_form_widget>` wraps Phoenix's `<.inputs_for>`
+
+This approach provides several benefits:
+
+1. **Best Practices Built-in**: All Phoenix LiveView's form handling best practices are preserved
+2. **Seamless Ash Integration**: AshPhoenix.Form works perfectly with the standard components
+3. **Consistent API**: Developers familiar with Phoenix get the expected behavior
+4. **Widget Benefits**: Additional features like grid integration, debug mode, and connection patterns
+
+### Form Component Standards
+
+When working with forms in this widget system:
+
+```elixir
+# What you write (widget abstraction)
+<.form_widget for={@form} on_submit={:save_user}>
+  <.input_widget field={@form[:name]} label="Name" />
+  <.input_widget field={@form[:email]} label="Email" />
+</.form_widget>
+
+# What it renders internally (Phoenix standards)
+<.form for={@form} phx-submit="save_user" phx-change="validate">
+  <.input field={@form[:name]} label="Name" {...widget_enhancements} />
+  <.input field={@form[:email]} label="Email" {...widget_enhancements} />
+</.form>
+```
+
+The widgets add consistent spacing, error handling, loading states, and other enhancements while preserving all Phoenix LiveView functionality.
+
+---
+
 ## Understanding Ash Connection Patterns
 
 Before diving into widgets, let's understand how Phoenix LiveView typically connects to Ash:
@@ -206,6 +245,9 @@ defmodule MyApp.Widgets.Base do
       attr :span, :integer, default: nil
       attr :padding, :integer, default: 4
       attr :id, :string, default: nil
+      
+      # Form-specific: Form widgets MUST wrap Phoenix LiveView components
+      # This ensures compatibility with AshPhoenix.Form and all its features
       
       # Grid and spacing integration
       defp widget_classes(assigns) do
@@ -580,13 +622,31 @@ Data display with built-in Ash query support:
 
 ### Form Widgets
 
-Deep AshPhoenix.Form integration:
+Form widgets provide a thin wrapper around Phoenix LiveView's standard form components while adding widget system benefits. They maintain full compatibility with AshPhoenix.Form:
+
+#### Form Initialization with AshPhoenix.Form
 
 ```elixir
-# Simple form
+# In your LiveView mount or update
+def mount(_params, _session, socket) do
+  # For new records
+  form = AshPhoenix.Form.for_create(MyApp.User, :create)
+  
+  # For updates
+  form = AshPhoenix.Form.for_update(user, :update)
+  
+  {:ok, assign(socket, :form, form)}
+end
+```
+
+#### Using Form Widgets
+
+```elixir
+# Simple form with Phoenix LiveView components wrapped in widgets
 <.form_widget
   for={@form}
   on_submit={:save_user}
+  on_change={:validate_user}
 >
   <.input_widget field={@form[:name]} label="Name" />
   <.input_widget field={@form[:email]} label="Email" type={:email} />
@@ -601,13 +661,29 @@ Deep AshPhoenix.Form integration:
   <.button_widget type={:submit} label="Save" />
 </.form_widget>
 
-# Connected form with Ash
-<.form_widget
-  data_source={:form, :create_user}
-  on_success={&handle_user_created/1}
->
-  <!-- Form automatically connects to Ash resource -->
-</.form_widget>
+# How form_widget internally uses Phoenix's <.form> component
+defmodule MyApp.Widgets.FormWidget do
+  use MyApp.Widgets.Base
+  
+  attr :for, AshPhoenix.Form, required: true
+  attr :on_submit, :string, required: true
+  attr :on_change, :string, default: "validate"
+  slot :inner_block, required: true
+  
+  def render(assigns) do
+    ~H"""
+    <.form 
+      for={@for} 
+      phx-submit={@on_submit} 
+      phx-change={@on_change}
+      class={widget_classes(assigns)}
+    >
+      {render_debug(assigns)}
+      <%= render_slot(@inner_block, @for) %>
+    </.form>
+    """
+  end
+end
 
 # Nested forms
 <.form_widget for={@form}>
@@ -628,6 +704,163 @@ Deep AshPhoenix.Form integration:
     </.nested_form_widget>
   </.fieldset_widget>
 </.form_widget>
+```
+
+### Form Validation and Submission
+
+The widget system fully supports AshPhoenix.Form's validation and submission patterns:
+
+#### Real-time Validation
+
+All form widgets automatically enable real-time validation through AshPhoenix.Form:
+
+```elixir
+# In your LiveView
+def handle_event("validate", %{"form" => params}, socket) do
+  form = AshPhoenix.Form.validate(socket.assigns.form, params)
+  {:noreply, assign(socket, :form, form)}
+end
+
+def handle_event("save_user", %{"form" => params}, socket) do
+  case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+    {:ok, user} ->
+      socket
+      |> put_flash(:info, "User created successfully")
+      |> redirect(to: ~p"/users/#{user.id}")
+      |> then(&{:noreply, &1})
+    
+    {:error, form} ->
+      {:noreply, assign(socket, :form, form)}
+  end
+end
+```
+
+#### Benefits of AshPhoenix.Form Integration
+
+1. **Automatic Validation**: All Ash validations are automatically applied
+2. **Policy Enforcement**: Ash policies are checked during submission
+3. **Change Tracking**: Ash changes are executed in the correct order
+4. **Error Handling**: Validation errors are automatically displayed
+5. **Nested Forms**: Full support for nested resources and relationships
+
+### Dynamic Forms with Special Parameters
+
+The widget system fully supports AshPhoenix.Form's special parameters for dynamic form manipulation:
+
+#### List Manipulation Parameters
+
+```elixir
+# Adding items to a list
+<.button_widget 
+  name="form[addresses][_add_addresses]" 
+  value="true"
+  label="Add Address"
+  type={:button}
+/>
+
+# Removing items from a list
+<.button_widget 
+  name="form[addresses][0][_drop_addresses]" 
+  value="true"
+  label="Remove"
+  type={:button}
+  color={:danger}
+/>
+
+# Sorting items in a list
+<.input_widget 
+  type={:hidden}
+  name="form[addresses][0][_sort_addresses]" 
+  value={0}
+/>
+```
+
+#### Practical Example: Dynamic Address Management
+
+```elixir
+<.form_widget for={@form}>
+  <.repeater_widget field={@form[:addresses]}>
+    <:template :let={address_form}>
+      <.card_widget>
+        <:body>
+          <.input_widget field={address_form[:street]} label="Street" />
+          <.input_widget field={address_form[:city]} label="City" />
+          
+          <!-- Hidden sort field for drag-and-drop reordering -->
+          <input type="hidden" 
+                 name={address_form[:_sort_addresses].name} 
+                 value={address_form.index} />
+          
+          <!-- Remove button with special parameter -->
+          <.button_widget 
+            type={:button}
+            name={address_form[:_drop_addresses].name}
+            value="true"
+            label="Remove Address"
+            color={:danger}
+            icon={:trash}
+          />
+        </:body>
+      </.card_widget>
+    </:template>
+    
+    <:add_button>
+      <!-- Add button with special parameter -->
+      <.button_widget 
+        type={:button}
+        name={@form[:addresses][:_add_addresses].name}
+        value="true"
+        label="Add Address"
+        icon={:plus}
+      />
+    </:add_button>
+  </.repeater_widget>
+</.form_widget>
+```
+
+#### Union Type Handling
+
+For polymorphic associations and union types:
+
+```elixir
+# Selecting union type
+<.select_widget 
+  field={@form[:content][:_union_type]}
+  label="Content Type"
+  options={[
+    {"Text Block", "text_block"},
+    {"Image", "image"},
+    {"Video", "video"}
+  ]}
+/>
+
+# Conditional rendering based on union type
+<%= case @form[:content][:_union_type].value do %>
+  <% "text_block" -> %>
+    <.textarea_widget field={@form[:content][:text]} label="Text Content" />
+  <% "image" -> %>
+    <.input_widget field={@form[:content][:url]} label="Image URL" />
+    <.input_widget field={@form[:content][:alt_text]} label="Alt Text" />
+  <% "video" -> %>
+    <.input_widget field={@form[:content][:embed_code]} label="Video Embed Code" />
+<% end %>
+```
+
+#### Event Handling for Dynamic Forms
+
+The form widget automatically handles these special parameters in the validate event:
+
+```elixir
+def handle_event("validate", params, socket) do
+  # AshPhoenix.Form automatically processes special parameters:
+  # - _add_* creates new nested forms
+  # - _drop_* removes nested forms
+  # - _sort_* reorders nested forms
+  # - _union_type switches union types
+  
+  form = AshPhoenix.Form.validate(socket.assigns.form, params)
+  {:noreply, assign(socket, :form, form)}
+end
 ```
 
 ### Action Widgets
@@ -901,12 +1134,23 @@ defmodule MyApp.Widgets.ConnectionResolver do
   def resolve({:form, action}, socket) do
     # Generate form for create
     resource = infer_resource_from_action(action)
-    AshPhoenix.Form.for_create(resource, action)
+    form = AshPhoenix.Form.for_create(resource, action)
+    
+    # Enable automatic validation
+    Map.put(form, :auto_validate, true)
   end
   
   def resolve({:form, action, record}, socket) do
     # Generate form for update
-    AshPhoenix.Form.for_update(record, action)
+    form = AshPhoenix.Form.for_update(record, action)
+    
+    # Enable automatic validation
+    Map.put(form, :auto_validate, true)
+  end
+  
+  def resolve({:form, :validate, form, params}, socket) do
+    # Handle form validation
+    AshPhoenix.Form.validate(form, params)
   end
   
   def resolve({:action, action, record}, socket) do
@@ -1299,6 +1543,7 @@ defmodule MyAppWeb.ProductsLive do
         title={modal_title(@form)}
         form={@form}
         on_submit={:save_product}
+        on_change={:validate_product}
         on_cancel={:hide_form}
       >
         <.tabs_widget>
@@ -1343,6 +1588,12 @@ defmodule MyAppWeb.ProductsLive do
   end
   
   # Event handlers work with both modes
+  def handle_event("validate_product", %{"form" => params}, socket) do
+    # Real-time validation as user types
+    form = AshPhoenix.Form.validate(socket.assigns.form, params)
+    {:noreply, assign(socket, :form, form)}
+  end
+  
   def handle_event("save_product", %{"form" => params}, socket) do
     case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
       {:ok, product} ->
@@ -1357,6 +1608,14 @@ defmodule MyAppWeb.ProductsLive do
       {:error, form} ->
         {:noreply, assign(socket, :form, form)}
     end
+  end
+  
+  # Handle dynamic form actions
+  def handle_event("add_variant", _, socket) do
+    # Using special parameters to add a product variant
+    params = %{"form" => %{"variants" => %{"_add_variants" => "true"}}}
+    form = AshPhoenix.Form.validate(socket.assigns.form, params)
+    {:noreply, assign(socket, :form, form)}
   end
 end
 ```
@@ -2064,7 +2323,119 @@ defmodule MyAppWeb do
 end
 ```
 
-5. **Create Widget Registry**
+5. **Create Form Widget Implementation**
+
+Here's a complete example of implementing a form widget that wraps Phoenix LiveView's standard form component:
+
+```elixir
+# lib/my_app_web/widgets/form_widget.ex
+defmodule MyAppWeb.Widgets.FormWidget do
+  use MyAppWeb.Widgets.Base
+  
+  attr :for, AshPhoenix.Form, required: true, 
+    doc: "The AshPhoenix.Form struct"
+  attr :on_submit, :string, required: true,
+    doc: "Event handler for form submission"
+  attr :on_change, :string, default: "validate",
+    doc: "Event handler for form changes (validation)"
+  
+  slot :inner_block, required: true
+  slot :actions, doc: "Form action buttons"
+  
+  def render(assigns) do
+    ~H"""
+    <.form 
+      for={@for} 
+      phx-submit={@on_submit} 
+      phx-change={@on_change}
+      class={["widget-form", widget_classes(assigns)]}
+      id={@id || "form-#{System.unique_integer([:positive])}"}
+    >
+      {render_debug(assigns)}
+      
+      <div class="form-content">
+        <%= render_slot(@inner_block, @for) %>
+      </div>
+      
+      <div :if={@actions} class="form-actions mt-6">
+        <%= render_slot(@actions) %>
+      </div>
+    </.form>
+    """
+  end
+end
+
+# lib/my_app_web/widgets/input_widget.ex
+defmodule MyAppWeb.Widgets.InputWidget do
+  use MyAppWeb.Widgets.Base
+  
+  attr :field, Phoenix.HTML.FormField, required: true,
+    doc: "The form field struct from the form"
+  attr :label, :string, default: nil
+  attr :type, :atom, default: :text
+  attr :placeholder, :string, default: nil
+  attr :help_text, :string, default: nil
+  attr :required, :boolean, default: false
+  
+  def render(assigns) do
+    ~H"""
+    <div class={["form-control", widget_classes(assigns)]}>
+      <.input 
+        field={@field}
+        label={@label}
+        type={@type}
+        placeholder={@placeholder}
+        required={@required}
+        help_text={@help_text}
+        class="input input-bordered"
+      />
+      {render_debug(assigns)}
+    </div>
+    """
+  end
+end
+
+# lib/my_app_web/widgets/nested_form_widget.ex
+defmodule MyAppWeb.Widgets.NestedFormWidget do
+  use MyAppWeb.Widgets.Base
+  
+  attr :field, Phoenix.HTML.FormField, required: true
+  attr :label, :string, default: nil
+  
+  slot :fields, required: true,
+    doc: "Template for each nested form item"
+  slot :add_button,
+    doc: "Button to add new items"
+  slot :empty_message,
+    doc: "Message when no items exist"
+  
+  def render(assigns) do
+    ~H"""
+    <div class={["nested-form-widget", widget_classes(assigns)]}>
+      <.label :if={@label}>{@label}</.label>
+      
+      <.inputs_for :let={nested_form} field={@field}>
+        <div class="nested-form-item">
+          <%= render_slot(@fields, nested_form) %>
+        </div>
+      </.inputs_for>
+      
+      <div :if={Enum.empty?(@field.value || [])} class="empty-message">
+        <%= render_slot(@empty_message) || "No items yet" %>
+      </div>
+      
+      <div :if={@add_button} class="mt-4">
+        <%= render_slot(@add_button) %>
+      </div>
+      
+      {render_debug(assigns)}
+    </div>
+    """
+  end
+end
+```
+
+6. **Create Widget Registry**
 
 ```elixir
 # lib/my_app_web/widgets.ex
