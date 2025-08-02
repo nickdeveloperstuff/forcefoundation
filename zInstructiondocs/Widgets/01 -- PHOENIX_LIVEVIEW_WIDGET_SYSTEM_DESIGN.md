@@ -29,7 +29,9 @@ This approach dramatically simplifies development by providing one way to build 
 
 ### The "Everything is a Widget" Commitment
 
-In this system, there are no exceptions. Every visual element on screen is a widget:
+In this system, there are no exceptions. Every visual element on screen is a widget. This commitment requires discipline but delivers massive benefits.
+
+#### Traditional vs Widget Approach
 
 ```elixir
 # Traditional Phoenix LiveView approach (NOT what we do)
@@ -45,44 +47,223 @@ In this system, there are no exceptions. Every visual element on screen is a wid
 </.section_widget>
 ```
 
+#### Implementation Rules
+
+1. **No Raw HTML**: Never write HTML tags directly in LiveView templates
+2. **No Direct Tailwind**: All styling goes through widget attributes
+3. **No Inline Styles**: Use widget variants and modifiers
+4. **No Mixed Patterns**: Either all widgets or refactor to widgets
+
+#### Widget Coverage Checklist
+
+- [ ] Text elements → `text_widget`
+- [ ] Headings → `heading_widget`
+- [ ] Containers → `section_widget`, `card_widget`, `box_widget`
+- [ ] Layout → `grid_widget`, `flex_widget`, `stack_widget`
+- [ ] Forms → `form_widget`, `input_widget`, `select_widget`
+- [ ] Navigation → `link_widget`, `nav_widget`, `breadcrumb_widget`
+- [ ] Feedback → `alert_widget`, `toast_widget`, `loading_widget`
+- [ ] Data Display → `table_widget`, `list_widget`, `stat_widget`
+- [ ] Media → `image_widget`, `video_widget`, `icon_widget`
+- [ ] Interactive → `button_widget`, `dropdown_widget`, `modal_widget`
+
 ### Why Total Widgetization?
 
-1. **Consistency**: One pattern to learn, one pattern to master
-2. **Encapsulation**: Best practices baked into every widget
-3. **Rapid Development**: Start with dumb widgets, connect later
-4. **Team Scaling**: New developers learn one system
-5. **Maintenance**: Changes propagate through widget updates
+#### 1. **Consistency**: One Pattern to Rule Them All
+
+```elixir
+# Every developer writes the same way
+# Junior developer code:
+<.user_card_widget user={@user} />
+
+# Senior developer code:
+<.user_card_widget user={@user} />
+
+# No debates about structure, styling, or patterns
+```
+
+#### 2. **Encapsulation**: Best Practices Baked In
+
+```elixir
+defmodule MyApp.Widgets.InputWidget do
+  # Automatically includes:
+  # - ARIA labels for accessibility
+  # - Error state handling
+  # - Loading states
+  # - Consistent spacing (4px system)
+  # - Focus management
+  # - Keyboard navigation
+  # - Touch target sizes
+  # - Dark mode support
+end
+```
+
+#### 3. **Rapid Development**: Prototype to Production
+
+```elixir
+# Day 1: Static prototype
+<.dashboard_widget>
+  <.stat_widget label="Users" value={1234} />
+  <.chart_widget type={:line} data={@fake_data} />
+</.dashboard_widget>
+
+# Day 30: Connected to production
+<.dashboard_widget>
+  <.stat_widget label="Users" data_source={:interface, :count_users} />
+  <.chart_widget type={:line} data_source={:interface, :revenue_chart} />
+</.dashboard_widget>
+# Only the data_source attribute changed!
+```
+
+#### 4. **Team Scaling**: Onboarding in Hours, Not Weeks
+
+```elixir
+# New developer training:
+# 1. Here's our widget catalog
+# 2. Use widgets for everything
+# 3. Start with dumb mode
+# 4. Connect when ready
+# That's it!
+```
+
+#### 5. **Maintenance**: Update Once, Fixed Everywhere
+
+```elixir
+# Fix accessibility issue in button_widget
+# Automatically fixed in:
+# - 500+ buttons across the app
+# - All future buttons
+# - No manual updates needed
+```
 
 ### The Two-Mode Principle
 
-Every widget operates in exactly one of two modes:
+Every widget operates in exactly one of two modes. Understanding these modes is crucial for effective development.
 
-**Dumb Mode**:
-- Receives data via attributes
-- No Ash connection
-- Perfect for prototyping
-- Fully functional UI
+#### **Dumb Mode**: Static Data Rendering
 
-**Connected Mode**:
-- Connects to Ash via `data_source`
-- Handles real-time updates
-- Manages loading states
-- Same visual output as dumb mode
+**When to Use**:
+- Prototyping new features
+- Design reviews
+- Static content (footer, about pages)
+- Testing UI states
+- Component libraries/storybooks
+
+**How It Works**:
+```elixir
+# Data passed directly as attributes
+<.user_list_widget
+  users={[
+    %{id: 1, name: "Alice", role: "Admin"},
+    %{id: 2, name: "Bob", role: "User"}
+  ]}
+  columns={[
+    %{field: :name, label: "Name"},
+    %{field: :role, label: "Role"}
+  ]}
+/>
+```
+
+**Benefits**:
+- Zero backend dependencies
+- Instant feedback
+- Easy to test all states
+- Designers can contribute
+- No database needed
+
+#### **Connected Mode**: Live Data Integration
+
+**When to Use**:
+- Production features
+- Real-time updates needed
+- Complex data relationships
+- User interactions
+- Dynamic content
+
+**How It Works**:
+```elixir
+# Data fetched via data_source
+<.user_list_widget
+  data_source={:interface, :list_users}
+  columns={[
+    %{field: :name, label: "Name", sortable: true},
+    %{field: :role, label: "Role", filterable: true}
+  ]}
+  on_row_click={:edit_user}
+/>
+```
+
+**Connection Types**:
+1. **Interface**: `{:interface, :function_name, args}`
+2. **Resource**: `{:resource, Resource, query_opts}`
+3. **Stream**: `{:stream, :stream_name}`
+4. **Subscribe**: `{:subscribe, "topic"}`
+5. **Form**: `{:form, :action, record}`
+6. **Action**: `{:action, :action_name, record}`
 
 ### Mental Model Simplification
 
-Traditional Phoenix LiveView development requires juggling:
-- HTML structure
-- Tailwind classes
-- Phoenix components
-- LiveView assigns
-- Ash resources
-- Data flow patterns
+#### Traditional Phoenix LiveView: 7 Mental Models
 
-Our widget system reduces this to:
-- Choose a widget
-- Provide data (dumb) or connection (connected)
-- Done
+```elixir
+# 1. HTML structure decisions
+<div> or <section>? <article>? Semantic HTML?
+
+# 2. Tailwind class memorization
+"px-4 py-2 sm:px-6 lg:px-8" or "p-4 sm:p-6 lg:p-8"?
+
+# 3. Phoenix component API
+attr :label, :string, required: true
+slot :inner_block
+
+# 4. LiveView assigns management
+assign(socket, :users, users)
+assign_new(socket, :filters, fn -> %{} end)
+
+# 5. Ash resource queries
+User |> Ash.Query.filter(active == true) |> Ash.read!()
+
+# 6. PubSub patterns
+PubSub.subscribe(MyApp.PubSub, "user:#{user.id}")
+
+# 7. Stream management
+stream(socket, :users, users)
+stream_insert(socket, :users, user, at: 0)
+```
+
+#### Widget System: 1 Mental Model
+
+```elixir
+# 1. Choose widget and mode
+<.table_widget 
+  data_source={:interface, :list_users}  # That's it!
+/>
+```
+
+#### Decision Tree Simplified
+
+```
+Need to show something?
+  ↓
+Find the right widget
+  ↓
+Have real data?
+  ├─ No → Use dumb mode with sample data
+  └─ Yes → Use connected mode with data_source
+    ↓
+Done! Widget handles everything else
+```
+
+#### Cognitive Load Comparison
+
+| Task | Traditional | Widget System |
+|------|-------------|---------------|
+| Create a form | 15+ decisions | 2 decisions |
+| Add a table | 20+ lines of code | 1 widget |
+| Make responsive | Manual breakpoints | Automatic |
+| Add dark mode | Update everything | Built-in |
+| Handle errors | Custom logic | Widget managed |
+| Loading states | Manual implementation | Automatic |
 
 ---
 
@@ -90,38 +271,151 @@ Our widget system reduces this to:
 
 ### Embracing Phoenix LiveView's Component System
 
-This widget system is built on top of Phoenix LiveView's standard components, not as a replacement. Every form widget internally uses the recommended Phoenix components:
+This widget system is built on top of Phoenix LiveView's standard components, not as a replacement. Every form widget internally uses the recommended Phoenix components.
 
-- `<.form_widget>` wraps Phoenix's `<.form>`
-- `<.input_widget>` wraps Phoenix's `<.input>`
-- `<.nested_form_widget>` wraps Phoenix's `<.inputs_for>`
+#### Component Mapping
 
-This approach provides several benefits:
+| Widget | Phoenix Component | Additional Features |
+|--------|------------------|--------------------|
+| `<.form_widget>` | `<.form>` | Auto-validation, debug mode, loading states |
+| `<.input_widget>` | `<.input>` | Grid integration, consistent spacing, themes |
+| `<.nested_form_widget>` | `<.inputs_for>` | Dynamic add/remove, drag-and-drop sorting |
+| `<.button_widget>` | `<.button>` | Loading states, confirmation dialogs, icons |
+| `<.link_widget>` | `<.link>` | Active states, prefetching, analytics |
 
-1. **Best Practices Built-in**: All Phoenix LiveView's form handling best practices are preserved
-2. **Seamless Ash Integration**: AshPhoenix.Form works perfectly with the standard components
-3. **Consistent API**: Developers familiar with Phoenix get the expected behavior
-4. **Widget Benefits**: Additional features like grid integration, debug mode, and connection patterns
+#### Benefits of This Approach
+
+##### 1. **Best Practices Built-in**
+
+```elixir
+defmodule MyApp.Widgets.FormWidget do
+  def render(assigns) do
+    ~H"""
+    <.form 
+      for={@for} 
+      phx-submit={@on_submit} 
+      phx-change={@on_change}
+      # Phoenix best practices preserved:
+      # - CSRF protection
+      # - Method spoofing
+      # - Error handling
+      # - Multipart encoding
+    >
+      {render_debug(assigns)}  # Widget enhancement
+      <%= render_slot(@inner_block, @for) %>
+    </.form>
+    """
+  end
+end
+```
+
+##### 2. **Seamless Ash Integration**
+
+```elixir
+# AshPhoenix.Form works exactly as expected
+form = AshPhoenix.Form.for_create(Resource, :create)
+
+# Widgets just pass it through
+<.form_widget for={form} on_submit={:save}>
+  <.input_widget field={form[:name]} />
+</.form_widget>
+```
+
+##### 3. **Consistent API for Phoenix Developers**
+
+```elixir
+# Phoenix developers already know this:
+<.form for={@form}>
+  <.input field={@form[:email]} type="email" />
+</.form>
+
+# Widget version is nearly identical:
+<.form_widget for={@form}>
+  <.input_widget field={@form[:email]} type={:email} />
+</.form_widget>
+```
+
+##### 4. **Widget Enhancements**
+
+```elixir
+# Automatic features added by widgets:
+- Debug mode overlay
+- Loading state management  
+- Grid system integration
+- Consistent spacing (4px system)
+- Theme support
+- Accessibility improvements
+- Error state animations
+- Touch-friendly tap targets
+```
 
 ### Form Component Standards
 
-When working with forms in this widget system:
+#### The Widget Transformation Pipeline
 
 ```elixir
-# What you write (widget abstraction)
+# Step 1: What you write (clean, semantic)
 <.form_widget for={@form} on_submit={:save_user}>
   <.input_widget field={@form[:name]} label="Name" />
   <.input_widget field={@form[:email]} label="Email" />
 </.form_widget>
 
-# What it renders internally (Phoenix standards)
-<.form for={@form} phx-submit="save_user" phx-change="validate">
-  <.input field={@form[:name]} label="Name" {...widget_enhancements} />
-  <.input field={@form[:email]} label="Email" {...widget_enhancements} />
+# Step 2: What widgets generate (Phoenix components + enhancements)
+<.form for={@form} phx-submit="save_user" phx-change="validate" class="widget-form">
+  <div class="form-control mb-4">
+    <.input 
+      field={@form[:name]} 
+      label="Name"
+      class="input input-bordered"
+      phx-debounce="300"
+      aria-describedby="name-error"
+    />
+  </div>
+  <div class="form-control mb-4">
+    <.input 
+      field={@form[:email]} 
+      label="Email"
+      type="email"
+      class="input input-bordered"
+      phx-debounce="300"
+      aria-describedby="email-error"
+    />
+  </div>
 </.form>
+
+# Step 3: Final HTML output (fully accessible, styled, interactive)
+<form phx-submit="save_user" phx-change="validate" class="widget-form">
+  <input type="hidden" name="_csrf_token" value="..."/>
+  <div class="form-control mb-4">
+    <label for="form_name" class="label">
+      <span class="label-text">Name</span>
+    </label>
+    <input 
+      type="text" 
+      name="form[name]" 
+      id="form_name"
+      class="input input-bordered"
+      phx-debounce="300"
+      aria-describedby="name-error"
+    />
+    <span id="name-error" class="error-message" phx-feedback-for="form[name]">
+      <!-- Errors show here -->
+    </span>
+  </div>
+  <!-- Similar for email field -->
+</form>
 ```
 
-The widgets add consistent spacing, error handling, loading states, and other enhancements while preserving all Phoenix LiveView functionality.
+#### Widget Enhancements Breakdown
+
+| Enhancement | Purpose | Implementation |
+|-------------|---------|----------------|
+| Consistent spacing | 4px grid system | `mb-4` classes |
+| Error handling | Show validation errors | Error spans with `phx-feedback-for` |
+| Loading states | Disable during submit | Widget manages disabled state |
+| Debouncing | Reduce server calls | `phx-debounce="300"` |
+| Accessibility | Screen reader support | ARIA attributes |
+| Themes | Dark/light mode | CSS variables |
 
 ---
 
@@ -129,86 +423,649 @@ The widgets add consistent spacing, error handling, loading states, and other en
 
 Before diving into widgets, let's understand how Phoenix LiveView typically connects to Ash:
 
-### 1. Code Interfaces
+### 1. Code Interfaces (The Foundation)
 
-The preferred pattern for accessing Ash resources:
+Code interfaces are the primary way widgets connect to Ash resources. They provide a clean, testable API layer.
+
+#### Defining Code Interfaces
 
 ```elixir
-# Define in domain
-resource User do
-  define :get_by_id, action: :read, get_by: [:id]
-  define :list_active, action: :read, filter: [active: true]
+# In your domain module (lib/my_app/accounts/accounts.ex)
+defmodule MyApp.Accounts do
+  use Ash.Domain
+  
+  resources do
+    resource MyApp.Accounts.User
+    resource MyApp.Accounts.Role
+  end
 end
 
-# Use in LiveView
-user = MyApp.Accounts.get_user_by_id!(id)
-users = MyApp.Accounts.list_active_users!()
-```
-
-### 2. AshPhoenix.Form
-
-For form handling with automatic validation:
-
-```elixir
-# Create form
-form = AshPhoenix.Form.for_create(MyApp.User, :create)
-
-# Validate
-form = AshPhoenix.Form.validate(form, params)
-
-# Submit
-case AshPhoenix.Form.submit(form) do
-  {:ok, user} -> # success
-  {:error, form} -> # show errors
+# In your resource (lib/my_app/accounts/resources/user.ex)
+defmodule MyApp.Accounts.User do
+  use Ash.Resource,
+    domain: MyApp.Accounts,
+    data_layer: AshPostgres.DataLayer
+    
+  code_interface do
+    # Basic CRUD operations
+    define :create, action: :create
+    define :read_all, action: :read
+    define :get_by_id, action: :read, get_by: [:id]
+    define :update, action: :update
+    define :destroy, action: :destroy
+    
+    # Filtered queries
+    define :list_active, action: :read, filter: [active: true]
+    define :list_by_role, action: :read, args: [:role_id]
+    
+    # Complex queries with calculations
+    define :list_with_stats, action: :read_with_stats
+    
+    # Bulk operations
+    define :bulk_activate, action: :activate
+    define :bulk_archive, action: :archive
+  end
+  
+  actions do
+    defaults [:create, :read, :update, :destroy]
+    
+    read :read_with_stats do
+      prepare build(load: [:post_count, :last_login_at])
+    end
+    
+    update :activate do
+      change set_attribute(:active, true)
+    end
+    
+    update :archive do
+      change set_attribute(:archived_at, &DateTime.utc_now/0)
+    end
+  end
 end
 ```
 
-### 3. Direct Queries (Discouraged in Views)
+#### Using Code Interfaces in Widgets
 
 ```elixir
-# Not recommended in LiveViews
-users = MyApp.User
-  |> Ash.Query.filter(active == true)
-  |> Ash.read!()
+# In your LiveView
+<.table_widget
+  data_source={:interface, :list_active}  # Calls MyApp.Accounts.list_active!()
+  columns={[
+    %{field: :name, label: "Name"},
+    %{field: :email, label: "Email"},
+    %{field: :last_login_at, label: "Last Login", format: :relative_time}
+  ]}
+/>
+
+# With arguments
+<.table_widget
+  data_source={:interface, :list_by_role, [@selected_role_id]}
+  columns={@columns}
+/>
+
+# With options
+<.table_widget
+  data_source={:interface, :read_all, [], [limit: 20, offset: @offset]}
+  columns={@columns}
+/>
 ```
 
-### 4. PubSub for Real-time Updates
+### 2. AshPhoenix.Form (Complete Form Management)
+
+AshPhoenix.Form provides comprehensive form handling with automatic validation, error management, and nested form support.
+
+#### Form Initialization Patterns
 
 ```elixir
-# In resource
-pub_sub do
-  module MyAppWeb.Endpoint
-  prefix "user"
-  publish :update, ["updated", :id]
-end
-
-# In LiveView
+# For creating new records
 def mount(_params, _session, socket) do
-  PubSub.subscribe(MyAppWeb.Endpoint, "user:updated:#{user_id}")
+  form = AshPhoenix.Form.for_create(
+    MyApp.Accounts.User,      # Resource module
+    :create,                   # Action name
+    # Optional configuration
+    forms: [
+      addresses: [
+        resource: MyApp.Accounts.Address,
+        create_action: :create,
+        update_action: :update
+      ]
+    ],
+    transform_params: &transform_params/2,
+    prepare_source: &prepare_source/1
+  )
+  
+  {:ok, assign(socket, :form, form)}
+end
+
+# For updating existing records
+def mount(%{"id" => id}, _session, socket) do
+  user = MyApp.Accounts.get_by_id!(id, load: [:addresses, :roles])
+  
+  form = AshPhoenix.Form.for_update(
+    user,                      # Existing record
+    :update,                   # Action name
+    forms: [
+      addresses: [
+        resource: MyApp.Accounts.Address,
+        create_action: :create,
+        update_action: :update,
+        destroy_action: :destroy
+      ]
+    ]
+  )
+  
+  {:ok, assign(socket, :form, form)}
+end
+```
+
+#### Validation Patterns
+
+```elixir
+# Basic validation on change
+def handle_event("validate", %{"form" => params}, socket) do
+  form = AshPhoenix.Form.validate(socket.assigns.form, params)
+  {:noreply, assign(socket, :form, form)}
+end
+
+# Validation with custom logic
+def handle_event("validate", %{"form" => params}, socket) do
+  form = 
+    socket.assigns.form
+    |> AshPhoenix.Form.validate(params)
+    |> maybe_add_custom_errors()
+    |> update_dependent_fields()
+    
+  {:noreply, assign(socket, :form, form)}
+end
+
+# Async validation
+def handle_event("validate_username", %{"value" => username}, socket) do
+  send(self(), {:check_username, username})
+  {:noreply, socket}
+end
+
+def handle_info({:check_username, username}, socket) do
+  form = 
+    case MyApp.Accounts.username_taken?(username) do
+      true -> 
+        AshPhoenix.Form.add_error(
+          socket.assigns.form, 
+          field: :username, 
+          message: "Username already taken"
+        )
+      false -> 
+        socket.assigns.form
+    end
+    
+  {:noreply, assign(socket, :form, form)}
+end
+```
+
+#### Submission Patterns
+
+```elixir
+# Basic submission
+def handle_event("save", %{"form" => params}, socket) do
+  case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+    {:ok, user} ->
+      socket
+      |> put_flash(:info, "User created successfully")
+      |> push_navigate(to: ~p"/users/#{user.id}")
+      |> then(&{:noreply, &1})
+      
+    {:error, form} ->
+      {:noreply, assign(socket, :form, form)}
+  end
+end
+
+# Submission with side effects
+def handle_event("save", %{"form" => params}, socket) do
+  with {:ok, form} <- AshPhoenix.Form.validate(socket.assigns.form, params),
+       {:ok, user} <- AshPhoenix.Form.submit(form),
+       {:ok, _} <- send_welcome_email(user),
+       {:ok, _} <- log_user_creation(user) do
+    socket
+    |> put_flash(:info, "User created and welcome email sent")
+    |> push_navigate(to: ~p"/users/#{user.id}")
+    |> then(&{:noreply, &1})
+  else
+    {:error, %AshPhoenix.Form{} = form} ->
+      {:noreply, assign(socket, :form, form)}
+      
+    {:error, reason} ->
+      socket
+      |> put_flash(:error, "An error occurred: #{inspect(reason)}")
+      |> then(&{:noreply, &1})
+  end
+end
+```
+
+### 3. Direct Queries (When and How to Use)
+
+While code interfaces are preferred, direct queries have their place in certain scenarios.
+
+#### When Direct Queries Are Appropriate
+
+```elixir
+# 1. Complex, one-off queries in admin interfaces
+def handle_event("run_report", %{"filters" => filters}, socket) do
+  query = 
+    MyApp.Accounts.User
+    |> Ash.Query.filter(created_at >= ^filters["start_date"])
+    |> Ash.Query.filter(created_at <= ^filters["end_date"])
+    |> Ash.Query.aggregate(:count, :posts)
+    |> Ash.Query.aggregate(:sum, :total_spent, :orders)
+    |> Ash.Query.group_by([:role, :status])
+    |> Ash.Query.sort([:role, :status])
+    
+  results = Ash.read!(query, actor: socket.assigns.current_user)
+  {:noreply, assign(socket, :report_data, results)}
+end
+
+# 2. Dynamic query building based on user input
+def build_search_query(base_query, search_params) do
+  Enum.reduce(search_params, base_query, fn
+    {"name", value}, query when value != "" ->
+      Ash.Query.filter(query, contains(name, ^value))
+      
+    {"status", values}, query when is_list(values) ->
+      Ash.Query.filter(query, status in ^values)
+      
+    {"date_range", %{"start" => start, "end" => end}}, query ->
+      query
+      |> Ash.Query.filter(created_at >= ^start)
+      |> Ash.Query.filter(created_at <= ^end)
+      
+    _, query -> query
+  end)
+end
+
+# 3. Performance-critical queries with specific loading patterns
+def load_dashboard_data(socket) do
+  # Single query with multiple aggregates
+  stats = 
+    MyApp.Analytics.Event
+    |> Ash.Query.filter(timestamp >= ago(1, :day))
+    |> Ash.Query.aggregate(:count, :total_events)
+    |> Ash.Query.aggregate(:count, :unique_users, :user_id, distinct: true)
+    |> Ash.Query.aggregate(:avg, :response_time)
+    |> Ash.read_one!()
+    
+  assign(socket, :stats, stats)
+end
+```
+
+#### Best Practices for Direct Queries
+
+```elixir
+# DO: Encapsulate complex queries in functions
+defmodule MyApp.Analytics do
+  def user_activity_query(user_id, date_range) do
+    MyApp.Analytics.Event
+    |> Ash.Query.filter(user_id == ^user_id)
+    |> Ash.Query.filter(timestamp >= ^date_range.start)
+    |> Ash.Query.filter(timestamp <= ^date_range.end)
+    |> Ash.Query.load([:category, :metadata])
+  end
+end
+
+# DON'T: Scatter queries throughout LiveView
+# Instead, create a code interface or query module
+```
+
+### 4. PubSub for Real-time Updates (Complete Setup)
+
+PubSub enables real-time updates across all connected clients when data changes.
+
+#### Resource Configuration
+
+```elixir
+defmodule MyApp.Accounts.User do
+  use Ash.Resource,
+    domain: MyApp.Accounts,
+    extensions: [AshPhoenix.PubSub]
+    
+  pub_sub do
+    module MyAppWeb.Endpoint
+    prefix "user"
+    
+    # Broadcast on different actions
+    publish :create, "created"
+    publish :update, ["updated", :id]
+    publish :destroy, ["destroyed", :id]
+    
+    # Custom events
+    publish :activate, ["activated", :id], event: "user_activated"
+    publish :deactivate, ["deactivated", :id], event: "user_deactivated"
+    
+    # Conditional broadcasting
+    publish :update, ["role_changed", :id], 
+      event: "role_changed",
+      condition: fn changeset -> 
+        Ash.Changeset.changing_attribute?(changeset, :role)
+      end
+  end
+end
+```
+
+#### LiveView Subscription Patterns
+
+```elixir
+# Basic subscription
+def mount(%{"id" => user_id}, _session, socket) do
+  if connected?(socket) do
+    # Subscribe to specific user updates
+    PubSub.subscribe(MyAppWeb.Endpoint, "user:updated:#{user_id}")
+    
+    # Subscribe to all user creations
+    PubSub.subscribe(MyAppWeb.Endpoint, "user:created")
+    
+    # Subscribe to role changes
+    PubSub.subscribe(MyAppWeb.Endpoint, "user:role_changed:#{user_id}")
+  end
+  
   {:ok, socket}
 end
+
+# Handling PubSub messages
+def handle_info({"user:updated:" <> user_id, user}, socket) do
+  # Update specific user in the UI
+  socket = 
+    if user.id == socket.assigns.current_user.id do
+      assign(socket, :current_user, user)
+    else
+      stream_insert(socket, :users, user)
+    end
+    
+  {:noreply, socket}
+end
+
+def handle_info({"user:created", new_user}, socket) do
+  # Add new user to list
+  socket = 
+    socket
+    |> stream_insert(:users, new_user, at: 0)
+    |> put_flash(:info, "New user #{new_user.name} just joined!")
+    
+  {:noreply, socket}
+end
+
+def handle_info({"user:role_changed:" <> user_id, %{old: old_role, new: new_role}}, socket) do
+  # Handle role changes with detailed info
+  socket = 
+    socket
+    |> update(:activity_log, &[%{
+      type: :role_change,
+      user_id: user_id,
+      from: old_role,
+      to: new_role,
+      timestamp: DateTime.utc_now()
+    } | &1])
+    
+  {:noreply, socket}
+end
 ```
 
-### 5. Phoenix Streams
-
-For efficient list updates:
+#### Widget Integration
 
 ```elixir
-socket
-|> stream(:users, users)
-|> stream_insert(:users, new_user, at: 0)
+# Real-time table widget
+<.table_widget
+  data_source={:interface, :list_users}
+  subscribe={["user:created", "user:updated:*", "user:destroyed:*"]}
+  stream={:users}
+  columns={@columns}
+/>
+
+# Real-time stat widget
+<.stat_widget
+  label="Active Users"
+  data_source={:interface, :count_active_users}
+  subscribe="metrics:active_users"
+  refresh_on_message={true}
+/>
 ```
 
-### 6. Action Invocation
+### 5. Phoenix Streams (Efficient List Management)
+
+Phoenix Streams provide efficient DOM updates for large lists without re-rendering everything.
+
+#### Stream Setup and Management
 
 ```elixir
-# Via code interface
-MyApp.Posts.publish_post!(post_id)
+def mount(_params, _session, socket) do
+  socket = 
+    socket
+    |> stream(:users, [])
+    |> stream(:notifications, [], dom_id: &"notif-#{&1.id}")
+    |> stream(:messages, [], limit: 100)
+    
+  {:ok, load_initial_data(socket)}
+end
 
-# Via changeset
-post
-|> Ash.Changeset.for_update(:publish)
-|> Ash.update!()
+def load_initial_data(socket) do
+  users = MyApp.Accounts.list_users!()
+  
+  socket
+  |> stream(:users, users, reset: true)
+end
+```
+
+#### Stream Operations
+
+```elixir
+# Insert at specific positions
+def handle_event("add_user", params, socket) do
+  {:ok, user} = MyApp.Accounts.create_user(params)
+  
+  socket = 
+    socket
+    |> stream_insert(:users, user, at: 0)  # At beginning
+    |> put_flash(:info, "User added")
+    
+  {:noreply, socket}
+end
+
+# Update existing items
+def handle_event("update_user", %{"id" => id} = params, socket) do
+  user = MyApp.Accounts.get_by_id!(id)
+  {:ok, updated_user} = MyApp.Accounts.update_user(user, params)
+  
+  socket = stream_insert(socket, :users, updated_user)
+  {:noreply, socket}
+end
+
+# Delete items
+def handle_event("delete_user", %{"id" => id}, socket) do
+  user = MyApp.Accounts.get_by_id!(id)
+  {:ok, _} = MyApp.Accounts.destroy_user(user)
+  
+  socket = stream_delete(socket, :users, user)
+  {:noreply, socket}
+end
+
+# Bulk operations
+def handle_event("refresh_users", _, socket) do
+  users = MyApp.Accounts.list_users!()
+  
+  socket = 
+    socket
+    |> stream(:users, users, reset: true)  # Replace all
+    |> put_flash(:info, "Users refreshed")
+    
+  {:noreply, socket}
+end
+
+# Filtered streams
+def handle_event("filter_users", %{"status" => status}, socket) do
+  filtered_users = 
+    MyApp.Accounts.list_users!(filter: [status: status])
+    
+  socket = stream(:users, filtered_users, reset: true)
+  {:noreply, socket}
+end
+```
+
+#### Stream with Widget Integration
+
+```elixir
+# In your LiveView
+<.table_widget
+  stream={:users}              # Use Phoenix stream
+  columns={@columns}
+  on_row_click={:edit_user}
+  selectable={true}
+  on_selection_change={:handle_selection}
+/>
+
+# The table widget internally renders:
+<tbody phx-update="stream" id="users-table">
+  <tr :for={{dom_id, user} <- @streams.users} id={dom_id}>
+    <td><%= user.name %></td>
+    <td><%= user.email %></td>
+  </tr>
+</tbody>
+```
+
+### 6. Action Invocation (Complete Patterns)
+
+Actions represent state changes in your system. Understanding how to invoke them properly is crucial.
+
+#### Defining Actions
+
+```elixir
+defmodule MyApp.Blog.Post do
+  actions do
+    defaults [:create, :read, :update, :destroy]
+    
+    # Simple state change
+    update :publish do
+      # Validate the post is ready
+      validate present(:title)
+      validate present(:content)
+      validate compare(:word_count, greater_than_or_equal_to: 100)
+      
+      # Set publication data
+      change set_attribute(:published_at, &DateTime.utc_now/0)
+      change set_attribute(:status, :published)
+      
+      # Side effects
+      after_action &send_publication_notifications/3
+    end
+    
+    # Complex action with arguments
+    update :schedule do
+      argument :publish_at, :utc_datetime_usec, allow_nil?: false
+      
+      validate compare(:publish_at, greater_than: :now)
+      
+      change set_attribute(:status, :scheduled)
+      change set_attribute(:scheduled_at, arg(:publish_at))
+    end
+    
+    # Bulk action
+    update :bulk_categorize do
+      argument :category_id, :uuid, allow_nil?: false
+      
+      change manage_relationship(:category_id, :category, type: :append_and_remove)
+    end
+  end
+end
+```
+
+#### Invocation Patterns
+
+```elixir
+# 1. Via Code Interface (Preferred)
+defmodule MyApp.Blog do
+  code_interface do
+    define :publish_post, args: [:post], action: :publish
+    define :schedule_post, args: [:post, :publish_at], action: :schedule
+    define :bulk_categorize_posts, args: [:posts, :category_id], action: :bulk_categorize
+  end
+end
+
+# Usage in LiveView
+def handle_event("publish", %{"id" => id}, socket) do
+  post = MyApp.Blog.get_post!(id)
+  
+  case MyApp.Blog.publish_post(post) do
+    {:ok, published_post} ->
+      socket
+      |> stream_insert(:posts, published_post)
+      |> put_flash(:info, "Post published!")
+      |> then(&{:noreply, &1})
+      
+    {:error, error} ->
+      socket
+      |> put_flash(:error, "Failed to publish: #{inspect(error)}")
+      |> then(&{:noreply, &1})
+  end
+end
+
+# 2. Via Changeset (More Control)
+def handle_event("publish_with_review", %{"id" => id}, socket) do
+  post = MyApp.Blog.get_post!(id)
+  
+  changeset = 
+    post
+    |> Ash.Changeset.for_update(:publish)
+    |> Ash.Changeset.force_change_attribute(:reviewed_by_id, socket.assigns.current_user.id)
+    |> Ash.Changeset.add_error(field: :content, message: "Contains prohibited words")
+    
+  if changeset.valid? do
+    case Ash.update(changeset) do
+      {:ok, published_post} -> 
+        # Success handling
+      {:error, changeset} -> 
+        # Error handling
+    end
+  else
+    # Handle validation errors
+  end
+end
+
+# 3. Via Form Submission
+def handle_event("save_post", %{"form" => params}, socket) do
+  # AshPhoenix.Form handles action invocation
+  case AshPhoenix.Form.submit(socket.assigns.form, params: params) do
+    {:ok, post} ->
+      # The form's action was invoked successfully
+      {:noreply, handle_successful_save(socket, post)}
+      
+    {:error, form} ->
+      {:noreply, assign(socket, :form, form)}
+  end
+end
+```
+
+#### Widget Action Integration
+
+```elixir
+# Action button widget
+<.button_widget
+  label="Publish"
+  data_source={:action, :publish, @post}
+  confirm="Are you sure you want to publish this post?"
+  on_success={:handle_publish_success}
+  on_error={:handle_publish_error}
+/>
+
+# Bulk action widget
+<.bulk_action_widget
+  label="Categorize Selected"
+  data_source={:action, :bulk_categorize}
+  requires_selection={true}
+  show_count={true}
+>
+  <:form>
+    <.select_widget
+      field={:category_id}
+      options={@categories}
+      label="Select Category"
+    />
+  </:form>
+</.bulk_action_widget>
 ```
 
 Our widget system abstracts ALL of these patterns behind a simple interface.
@@ -219,55 +1076,178 @@ Our widget system abstracts ALL of these patterns behind a simple interface.
 
 ### The Universal Widget Module
 
-Every widget in the system inherits from a base behavior:
+Every widget in the system inherits from a base behavior that provides common functionality, attributes, and patterns.
+
+#### Complete Base Module Implementation
 
 ```elixir
 defmodule MyApp.Widgets.Base do
   @moduledoc """
   Base behavior for all widgets in the system.
+  
+  This module provides:
+  - Common attributes (class, id, data_source, debug_mode)
+  - Grid system integration (span, padding, margin)
+  - Data resolution patterns
+  - Error handling
+  - Loading states
+  - Debug tooling
   """
   
+  # Required callbacks for all widgets
   @callback render(assigns :: map()) :: Phoenix.LiveView.Rendered.t()
   @callback connect(data_source :: term(), socket :: Phoenix.LiveView.Socket.t()) :: 
     {:ok, Phoenix.LiveView.Socket.t()} | {:error, term()}
+  
+  # Optional callbacks
+  @callback handle_event(event :: String.t(), params :: map(), socket :: Phoenix.LiveView.Socket.t()) ::
+    {:noreply, Phoenix.LiveView.Socket.t()}
+  @callback update(assigns :: map(), socket :: Phoenix.LiveView.Socket.t()) ::
+    {:ok, Phoenix.LiveView.Socket.t()}
+    
+  @optional_callbacks handle_event: 3, update: 2
   
   defmacro __using__(opts) do
     quote do
       use Phoenix.Component
       import MyApp.Widgets.Helpers
+      import MyApp.Widgets.DataResolver
       
       @behaviour MyApp.Widgets.Base
       
-      # Common attributes all widgets share
-      attr :class, :string, default: ""
-      attr :data_source, :any, default: :static
-      attr :debug_mode, :boolean, default: false
-      attr :span, :integer, default: nil
-      attr :padding, :integer, default: 4
-      attr :id, :string, default: nil
+      # Core attributes every widget has
+      attr :id, :string, default: nil,
+        doc: "DOM ID for the widget"
+      attr :class, :string, default: "",
+        doc: "Additional CSS classes"
+      attr :data_source, :any, default: :static,
+        doc: "Data source configuration (see connection patterns)"
+      attr :debug_mode, :boolean, default: false,
+        doc: "Show debug overlay with data source info"
       
-      # Form-specific: Form widgets MUST wrap Phoenix LiveView components
+      # Grid system attributes  
+      attr :span, :integer, default: nil,
+        values: [1, 2, 3, 4, 6, 8, 12],
+        doc: "Grid columns to span (12-column grid)"
+      attr :padding, :integer, default: nil,
+        values: [0, 1, 2, 3, 4, 6, 8],
+        doc: "Padding multiplier (4px base)"
+      attr :margin, :integer, default: nil,
+        values: [0, 1, 2, 3, 4, 6, 8],
+        doc: "Margin multiplier (4px base)"
+        
+      # Responsive attributes
+      attr :hide_on_mobile, :boolean, default: false
+      attr :hide_on_desktop, :boolean, default: false
+      
+      # State attributes
+      attr :loading, :boolean, default: false,
+        doc: "Show loading state"
+      attr :error, :string, default: nil,
+        doc: "Error message to display"
+      attr :disabled, :boolean, default: false,
+        doc: "Disable all interactions"
+      
+      # Theme attributes
+      attr :variant, :atom, default: :default,
+        doc: "Visual variant of the widget"
+      attr :theme, :atom, default: :auto,
+        values: [:auto, :light, :dark],
+        doc: "Force specific theme"
+      
+      # Accessibility attributes
+      attr :aria_label, :string, default: nil
+      attr :aria_describedby, :string, default: nil
+      attr :role, :string, default: nil
+      
+      # Analytics attributes
+      attr :track_clicks, :boolean, default: false
+      attr :track_impressions, :boolean, default: false
+      attr :analytics_metadata, :map, default: %{}
+      
+      # Form-specific note
+      # Form widgets MUST wrap Phoenix LiveView components
       # This ensures compatibility with AshPhoenix.Form and all its features
       
-      # Grid and spacing integration
+      # Helper functions available to all widgets
+      
       defp widget_classes(assigns) do
         [
+          # Base widget class
+          "widget",
+          "widget-#{widget_name()}",
+          
+          # Grid classes
           span_class(assigns[:span]),
           padding_class(assigns[:padding]),
+          margin_class(assigns[:margin]),
+          
+          # Responsive classes
+          assigns[:hide_on_mobile] && "hidden sm:block",
+          assigns[:hide_on_desktop] && "block sm:hidden",
+          
+          # State classes
+          assigns[:loading] && "widget-loading",
+          assigns[:error] && "widget-error",
+          assigns[:disabled] && "widget-disabled",
+          
+          # Theme classes
+          theme_class(assigns[:theme]),
+          variant_class(assigns[:variant]),
+          
+          # Custom classes
           assigns[:class]
         ]
         |> Enum.filter(& &1)
         |> Enum.join(" ")
       end
       
-      # Debug overlay
+      defp widget_name do
+        __MODULE__
+        |> Module.split()
+        |> List.last()
+        |> Macro.underscore()
+        |> String.replace("_widget", "")
+      end
+      
       defp render_debug(assigns) do
         ~H"""
-        <div :if={@debug_mode} class="absolute top-1 right-1 text-xs px-1 bg-base-300 rounded">
-          {inspect(@data_source)}
+        <div :if={@debug_mode} class="widget-debug-overlay">
+          <div class="widget-debug-header">
+            <%= widget_name() %>
+          </div>
+          <div class="widget-debug-content">
+            <div>Mode: <%= detect_mode(assigns) %></div>
+            <div>Source: <%= inspect(@data_source) %></div>
+            <div :if={@loading}>Loading...</div>
+            <div :if={@error} class="text-red-500">Error: {@error}</div>
+          </div>
         </div>
         """
       end
+      
+      defp render_loading(assigns) do
+        ~H"""
+        <div :if={@loading} class="widget-loading-overlay">
+          <.spinner_widget size={:sm} />
+        </div>
+        """
+      end
+      
+      defp render_error(assigns) do
+        ~H"""
+        <div :if={@error} class="widget-error-container">
+          <.alert_widget type={:error} message={@error} />
+        </div>
+        """
+      end
+      
+      # Default implementations
+      def update(assigns, socket) do
+        {:ok, assign(socket, assigns)}
+      end
+      
+      defoverridable update: 2
     end
   end
 end
@@ -275,76 +1255,443 @@ end
 
 ### Widget Type System
 
-Using Phoenix.Component's attribute system for type safety:
+The widget type system leverages Phoenix.Component's powerful attribute system for compile-time safety and runtime validation.
+
+#### Type-Safe Widget Definition
 
 ```elixir
 defmodule MyApp.Widgets.UserCard do
   use MyApp.Widgets.Base
   
-  # Dumb mode attributes
-  attr :name, :string, default: nil
-  attr :email, :string, default: nil
-  attr :avatar, :string, default: nil
-  attr :role, :string, default: nil
+  # Documentation for the widget
+  @moduledoc """
+  Displays user information in a card format.
   
+  ## Examples
+  
+      # Dumb mode
+      <.user_card name="John Doe" email="john@example.com" role="Admin" />
+      
+      # Connected mode
+      <.user_card data_source={:interface, :get_user, [@user_id]} />
+  """
+  
+  # Attributes with full type specifications
+  
+  # Data attributes (used in dumb mode)
+  attr :name, :string, default: nil,
+    doc: "User's display name"
+  attr :email, :string, default: nil,
+    doc: "User's email address",
+    examples: ["user@example.com"]
+  attr :avatar, :string, default: nil,
+    doc: "URL to user's avatar image"
+  attr :role, :string, default: nil,
+    values: ~w(admin user moderator guest),
+    doc: "User's role in the system"
+  attr :status, :atom, default: :active,
+    values: [:active, :inactive, :suspended, :pending],
+    doc: "User's account status"
+    
   # Connected mode configuration
-  attr :load, :list, default: []
-  attr :subscribe, :boolean, default: true
+  attr :load, :list, default: [],
+    doc: "Relationships to load (e.g., [:profile, :preferences])"
+  attr :subscribe, :boolean, default: true,
+    doc: "Subscribe to real-time updates for this user"
+  attr :refresh_interval, :integer, default: nil,
+    doc: "Auto-refresh interval in milliseconds"
+    
+  # Display configuration
+  attr :show_status, :boolean, default: true,
+    doc: "Show user status indicator"
+  attr :show_actions, :boolean, default: true,
+    doc: "Show action buttons"
+  attr :compact, :boolean, default: false,
+    doc: "Use compact layout"
+    
+  # Interaction handlers
+  attr :on_click, :any, default: nil,
+    doc: "Handler for card click events"
+  attr :on_edit, :any, default: nil,
+    doc: "Handler for edit button click"
+  attr :on_delete, :any, default: nil,
+    doc: "Handler for delete button click"
+    
+  # Slots for customization
+  slot :actions do
+    attr :name, :string, required: true
+    attr :icon, :atom
+    attr :handler, :any, required: true
+  end
+  
+  slot :badge do
+    attr :label, :string
+    attr :color, :atom
+  end
+  
+  slot :footer
   
   def render(assigns) do
-    # Resolve data based on mode
-    assigns = resolve_data(assigns)
+    # Resolve data and handle modes
+    assigns = 
+      assigns
+      |> resolve_data()
+      |> maybe_subscribe()
+      |> assign_computed_values()
     
     ~H"""
-    <div class={["card", widget_classes(assigns)]}>
+    <div 
+      class={["user-card", widget_classes(assigns)]}
+      phx-click={@on_click}
+      role={@on_click && "button"}
+      tabindex={@on_click && "0"}
+    >
       {render_debug(assigns)}
+      {render_loading(assigns)}
       
-      <div class="card-body">
-        <div class="flex items-center space-x-4">
-          <.avatar_widget src={@avatar} size={:lg} />
-          <div>
-            <.heading_widget level={3} text={@name} />
-            <.text_widget size={:sm} color={:muted} text={@email} />
-            <.badge_widget label={@role} color={:primary} />
+      <div :if={!@loading} class="card-body">
+        <!-- Status indicator -->
+        <div :if={@show_status} class="absolute top-2 right-2">
+          <.status_indicator_widget status={@status} />
+        </div>
+        
+        <!-- Main content -->
+        <div class={[
+          "flex items-center",
+          @compact && "space-x-3" || "space-x-4"
+        ]}>
+          <.avatar_widget 
+            src={@avatar} 
+            size={@compact && :md || :lg}
+            name={@name}
+          />
+          
+          <div class="flex-1 min-w-0">
+            <.heading_widget 
+              level={@compact && 4 || 3} 
+              text={@name}
+              class="truncate"
+            />
+            <.text_widget 
+              size={:sm} 
+              color={:muted} 
+              text={@email}
+              class="truncate"
+            />
+            <div class="flex items-center gap-2 mt-1">
+              <.badge_widget 
+                label={@role} 
+                color={role_color(@role)}
+                size={:sm}
+              />
+              <!-- Custom badges -->
+              <.badge_widget :for={badge <- @badge} {@badge} />
+            </div>
+          </div>
+          
+          <!-- Actions -->
+          <div :if={@show_actions} class="flex items-center gap-2">
+            <.button_widget
+              :if={@on_edit}
+              icon={:edit}
+              size={:sm}
+              variant={:ghost}
+              on_click={@on_edit}
+              aria_label="Edit user"
+            />
+            <.button_widget
+              :if={@on_delete}
+              icon={:trash}
+              size={:sm}
+              variant={:ghost}
+              color={:danger}
+              on_click={@on_delete}
+              aria_label="Delete user"
+              confirm="Are you sure?"
+            />
+            <!-- Custom actions -->
+            <.button_widget :for={action <- @actions}
+              icon={action.icon}
+              size={:sm}
+              variant={:ghost}
+              on_click={action.handler}
+              aria_label={action.name}
+            />
           </div>
         </div>
+        
+        <!-- Footer slot -->
+        <div :if={@footer} class="mt-4 pt-4 border-t">
+          <%= render_slot(@footer) %>
+        </div>
       </div>
+      
+      {render_error(assigns)}
     </div>
     """
   end
   
+  # Data resolution based on mode
   defp resolve_data(%{data_source: :static} = assigns), do: assigns
   
-  defp resolve_data(%{data_source: {:interface, function}} = assigns) do
-    case apply_interface(function, assigns) do
-      {:ok, data} -> Map.merge(assigns, data)
-      {:error, _} -> put_error_state(assigns)
+  defp resolve_data(%{data_source: {:interface, function}} = assigns) when is_atom(function) do
+    case apply_interface(function, [], assigns) do
+      {:ok, data} -> 
+        assigns
+        |> Map.merge(data)
+        |> assign(:loading, false)
+      {:error, error} -> 
+        assigns
+        |> assign(:error, format_error(error))
+        |> assign(:loading, false)
+      :loading ->
+        assign(assigns, :loading, true)
     end
   end
+  
+  defp resolve_data(%{data_source: {:interface, function, args}} = assigns) do
+    case apply_interface(function, args, assigns) do
+      {:ok, data} -> Map.merge(assigns, data)
+      {:error, error} -> assign(assigns, :error, format_error(error))
+    end
+  end
+  
+  # Real-time subscriptions
+  defp maybe_subscribe(%{subscribe: true, data_source: {:interface, _, [id]}} = assigns) do
+    if connected?(assigns.socket) do
+      PubSub.subscribe(MyAppWeb.Endpoint, "user:updated:#{id}")
+    end
+    assigns
+  end
+  defp maybe_subscribe(assigns), do: assigns
+  
+  # Computed values
+  defp assign_computed_values(assigns) do
+    assigns
+    |> assign_new(:avatar, fn -> gravatar_url(assigns[:email]) end)
+    |> assign_new(:initials, fn -> get_initials(assigns[:name]) end)
+  end
+  
+  # Helper functions
+  defp role_color("admin"), do: :danger
+  defp role_color("moderator"), do: :warning  
+  defp role_color("user"), do: :primary
+  defp role_color(_), do: :default
+  
+  defp format_error(%Ash.Error.Query{} = error), do: "Failed to load user"
+  defp format_error(error) when is_binary(error), do: error
+  defp format_error(_), do: "An error occurred"
 end
 ```
 
-### Grid Integration
+### Grid Integration and Spacing System
 
-Following the 4px atomic spacing system:
+The widget system implements a comprehensive 4px atomic spacing system that ensures visual consistency across all widgets.
+
+#### Complete Helper Module
 
 ```elixir
 defmodule MyApp.Widgets.Helpers do
-  def span_class(nil), do: nil
-  def span_class(1), do: "span-1"
-  def span_class(2), do: "span-2"
-  def span_class(3), do: "span-3"
-  def span_class(4), do: "span-4"
-  def span_class(6), do: "span-6"
-  def span_class(8), do: "span-8"
-  def span_class(12), do: "span-12"
+  @moduledoc """
+  Helper functions for widget styling, spacing, and layout.
   
-  def padding_class(1), do: "p-1"  # 4px
-  def padding_class(2), do: "p-2"  # 8px
-  def padding_class(3), do: "p-3"  # 12px
-  def padding_class(4), do: "p-4"  # 16px
-  def padding_class(6), do: "p-6"  # 24px
-  def padding_class(8), do: "p-8"  # 32px
+  Implements a 4px atomic spacing system:
+  - 1 unit = 4px
+  - 2 units = 8px
+  - 3 units = 12px
+  - 4 units = 16px (base)
+  - 6 units = 24px
+  - 8 units = 32px
+  """
+  
+  # Grid column classes (12-column system)
+  def span_class(nil), do: nil
+  def span_class(1), do: "col-span-1"
+  def span_class(2), do: "col-span-2"
+  def span_class(3), do: "col-span-3"
+  def span_class(4), do: "col-span-4"
+  def span_class(6), do: "col-span-6"
+  def span_class(8), do: "col-span-8"
+  def span_class(12), do: "col-span-12"
+  def span_class(n) when n in [5, 7, 9, 10, 11], do: "col-span-#{n}"
+  
+  # Responsive span classes
+  def responsive_span_class(mobile: m, tablet: t, desktop: d) do
+    [
+      span_class(m),
+      t && "sm:#{span_class(t)}",
+      d && "lg:#{span_class(d)}"
+    ]
+    |> Enum.filter(& &1)
+    |> Enum.join(" ")
+  end
+  
+  # Padding classes (4px base)
+  def padding_class(nil), do: nil
+  def padding_class(0), do: "p-0"
+  def padding_class(1), do: "p-1"   # 4px
+  def padding_class(2), do: "p-2"   # 8px
+  def padding_class(3), do: "p-3"   # 12px
+  def padding_class(4), do: "p-4"   # 16px (default)
+  def padding_class(6), do: "p-6"   # 24px
+  def padding_class(8), do: "p-8"   # 32px
+  def padding_class(12), do: "p-12" # 48px
+  def padding_class(16), do: "p-16" # 64px
+  
+  # Directional padding
+  def padding_x_class(nil), do: nil
+  def padding_x_class(n), do: "px-#{n}"
+  
+  def padding_y_class(nil), do: nil  
+  def padding_y_class(n), do: "py-#{n}"
+  
+  def padding_top_class(nil), do: nil
+  def padding_top_class(n), do: "pt-#{n}"
+  
+  def padding_bottom_class(nil), do: nil
+  def padding_bottom_class(n), do: "pb-#{n}"
+  
+  # Margin classes (4px base)
+  def margin_class(nil), do: nil
+  def margin_class(0), do: "m-0"
+  def margin_class(1), do: "m-1"   # 4px
+  def margin_class(2), do: "m-2"   # 8px
+  def margin_class(3), do: "m-3"   # 12px
+  def margin_class(4), do: "m-4"   # 16px
+  def margin_class(6), do: "m-6"   # 24px
+  def margin_class(8), do: "m-8"   # 32px
+  def margin_class(-1), do: "-m-1" # Negative margins
+  
+  # Gap classes for flex/grid
+  def gap_class(nil), do: nil
+  def gap_class(0), do: "gap-0"
+  def gap_class(1), do: "gap-1"   # 4px
+  def gap_class(2), do: "gap-2"   # 8px
+  def gap_class(3), do: "gap-3"   # 12px
+  def gap_class(4), do: "gap-4"   # 16px
+  def gap_class(6), do: "gap-6"   # 24px
+  def gap_class(8), do: "gap-8"   # 32px
+  
+  # Theme classes
+  def theme_class(:auto), do: nil
+  def theme_class(:light), do: "light"
+  def theme_class(:dark), do: "dark"
+  
+  # Variant classes (customizable per widget)
+  def variant_class(:default), do: nil
+  def variant_class(:primary), do: "widget-primary"
+  def variant_class(:secondary), do: "widget-secondary"
+  def variant_class(:success), do: "widget-success"
+  def variant_class(:danger), do: "widget-danger"
+  def variant_class(:warning), do: "widget-warning"
+  def variant_class(:info), do: "widget-info"
+  def variant_class(:ghost), do: "widget-ghost"
+  def variant_class(:outline), do: "widget-outline"
+  
+  # Size classes
+  def size_class(:xs), do: "size-xs"
+  def size_class(:sm), do: "size-sm"
+  def size_class(:md), do: "size-md"
+  def size_class(:lg), do: "size-lg"
+  def size_class(:xl), do: "size-xl"
+  def size_class(:xxl), do: "size-2xl"
+  
+  # Border radius classes
+  def rounded_class(nil), do: "rounded"
+  def rounded_class(:none), do: "rounded-none"
+  def rounded_class(:sm), do: "rounded-sm"
+  def rounded_class(:md), do: "rounded-md"
+  def rounded_class(:lg), do: "rounded-lg"
+  def rounded_class(:xl), do: "rounded-xl"
+  def rounded_class(:full), do: "rounded-full"
+  
+  # Shadow classes
+  def shadow_class(nil), do: nil
+  def shadow_class(:none), do: "shadow-none"
+  def shadow_class(:sm), do: "shadow-sm"
+  def shadow_class(:md), do: "shadow-md"
+  def shadow_class(:lg), do: "shadow-lg"
+  def shadow_class(:xl), do: "shadow-xl"
+  
+  # Animation classes
+  def animation_class(:pulse), do: "animate-pulse"
+  def animation_class(:spin), do: "animate-spin"
+  def animation_class(:bounce), do: "animate-bounce"
+  def animation_class(:fade_in), do: "animate-fade-in"
+  def animation_class(:slide_up), do: "animate-slide-up"
+  def animation_class(_), do: nil
+  
+  # Transition classes
+  def transition_class(properties \\ [:all]) do
+    base = "transition-"
+    props = Enum.map_join(properties, " ", fn
+      :all -> "#{base}all"
+      :colors -> "#{base}colors"
+      :opacity -> "#{base}opacity"
+      :transform -> "#{base}transform"
+      :shadow -> "#{base}shadow"
+    end)
+    "#{props} duration-200 ease-in-out"
+  end
+  
+  # Focus classes
+  def focus_class(color \\ :primary) do
+    "focus:outline-none focus:ring-2 focus:ring-#{color}-500 focus:ring-offset-2"
+  end
+  
+  # Responsive visibility classes
+  def visibility_class(show_on: devices) do
+    case devices do
+      :all -> nil
+      :mobile -> "block sm:hidden"
+      :tablet -> "hidden sm:block lg:hidden"
+      :desktop -> "hidden lg:block"
+      [:mobile, :tablet] -> "block lg:hidden"
+      [:tablet, :desktop] -> "hidden sm:block"
+    end
+  end
+  
+  # Accessibility classes
+  def sr_only_class, do: "sr-only"
+  def not_sr_only_class, do: "not-sr-only"
+  def focus_within_class, do: "focus-within:ring-2 focus-within:ring-primary-500"
+end
+```
+
+#### Grid Layout Widget
+
+```elixir
+defmodule MyApp.Widgets.GridWidget do
+  use MyApp.Widgets.Base
+  
+  attr :columns, :integer, default: 12,
+    doc: "Number of columns in the grid"
+  attr :gap, :integer, default: 4,
+    doc: "Gap between grid items (4px units)"
+  attr :responsive, :boolean, default: true,
+    doc: "Enable responsive column changes"
+    
+  slot :inner_block, required: true
+  
+  def render(assigns) do
+    ~H"""
+    <div class={[
+      "grid",
+      grid_columns_class(@columns, @responsive),
+      gap_class(@gap),
+      widget_classes(assigns)
+    ]}>
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
+  end
+  
+  defp grid_columns_class(12, true) do
+    "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+  end
+  defp grid_columns_class(n, false) do
+    "grid-cols-#{n}"
+  end
 end
 ```
 
