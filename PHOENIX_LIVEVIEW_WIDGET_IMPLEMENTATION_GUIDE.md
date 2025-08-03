@@ -975,6 +975,11 @@ _Use this space to note any overall observations, patterns noticed, or suggestio
 
 ## Phase 2: Essential Layout Widgets (Wrapping DaisyUI Components)
 
+**Tailwind CSS 4 Compatibility Note**: This implementation uses dynamic class generation (e.g., `grid-cols-#{n}`, `gap-x-#{n}`). With Tailwind CSS 4, ensure these classes are either:
+1. Included in your CSS safelist configuration
+2. Pre-generated through explicit usage in your templates
+3. Replaced with predefined class mappings for production builds
+
 ### Section 2.1: Grid and Layout Widgets
 
 #### Tasks:
@@ -1045,6 +1050,8 @@ defmodule ForcefoundationWeb.Widgets.GridWidget do
   end
   
   # Handle responsive columns
+  # Note: With Tailwind CSS 4, ensure these dynamic classes are included
+  # in your CSS build. Consider using a safelist or predefined mapping.
   defp columns_class(columns) when is_integer(columns) do
     "grid-cols-#{columns}"
   end
@@ -1064,6 +1071,8 @@ defmodule ForcefoundationWeb.Widgets.GridWidget do
   end
   
   defp gap_x_class(nil), do: nil
+  # Note: For Tailwind CSS 4 compatibility, ensure dynamic gap classes
+  # are safelisted or use predefined values
   defp gap_x_class(n), do: "gap-x-#{n}"
   
   defp gap_y_class(nil), do: nil
@@ -1552,7 +1561,7 @@ defmodule ForcefoundationWeb.Widgets.CardWidget do
         Card content goes here
       </.card_widget>
       
-      <.card_widget image="/images/photo.jpg" compact={true}>
+      <.card_widget image="/images/photo.jpg" variant={:compact}>
         <:body>
           <h2 class="card-title">Card with Image</h2>
           <p>Card description</p>
@@ -1574,7 +1583,7 @@ defmodule ForcefoundationWeb.Widgets.CardWidget do
   attr :title, :string, default: nil,
     doc: "Card title (shorthand)"
   attr :bordered, :boolean, default: false,
-    doc: "Add border to card"
+    doc: "Add border to card (uses card-border class in DaisyUI 5)"
   attr :hoverable, :boolean, default: false,
     doc: "Add hover effect"
   attr :clickable, :boolean, default: false,
@@ -1596,7 +1605,7 @@ defmodule ForcefoundationWeb.Widgets.CardWidget do
         "card",
         "bg-base-100",
         variant_class(@variant),
-        @bordered && "card-bordered",
+        @bordered && "card-border",
         @hoverable && "hover:shadow-xl transition-shadow",
         @clickable && "cursor-pointer",
         widget_classes(assigns)
@@ -1647,7 +1656,7 @@ defmodule ForcefoundationWeb.Widgets.CardWidget do
   end
   
   defp variant_class(:default), do: nil
-  defp variant_class(:compact), do: "card-compact"
+  defp variant_class(:compact), do: "card-sm"
   defp variant_class(:side), do: "card-side"
   defp variant_class(:overlay), do: "image-full"
   
