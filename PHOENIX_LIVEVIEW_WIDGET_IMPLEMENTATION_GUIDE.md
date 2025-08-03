@@ -2300,6 +2300,7 @@ defmodule ForcefoundationWeb.Widgets.FormHelpers do
   Helper functions for form widgets.
   """
   
+  import Phoenix.Component
   alias Phoenix.HTML.Form
   alias AshPhoenix.Form, as: AshForm
   
@@ -2369,6 +2370,7 @@ defmodule ForcefoundationWeb.FormTestLive do
   # Mock resource for testing
   defmodule User do
     use Ash.Resource,
+      domain: YourApp.Accounts,
       data_layer: Ash.DataLayer.Ets
     
     attributes do
@@ -4372,6 +4374,7 @@ defmodule ForcefoundationWeb.NestedFormTestLive do
   # Mock schemas for testing
   defmodule Address do
     use Ash.Resource,
+      domain: YourApp.Contacts,
       data_layer: Ash.DataLayer.Ets
     
     attributes do
@@ -4385,6 +4388,7 @@ defmodule ForcefoundationWeb.NestedFormTestLive do
   
   defmodule Contact do
     use Ash.Resource,
+      domain: YourApp.Contacts,
       data_layer: Ash.DataLayer.Ets
     
     attributes do
@@ -6201,6 +6205,7 @@ defmodule ForcefoundationWeb.ActionButtonTestLive do
   # Mock resource for testing
   defmodule Post do
     use Ash.Resource,
+      domain: YourApp.Blog,
       data_layer: Ash.DataLayer.Ets
     
     attributes do
@@ -13722,6 +13727,7 @@ Create `lib/forcefoundation/catalog/product.ex`:
 ```elixir
 defmodule Forcefoundation.Catalog.Product do
   use Ash.Resource,
+    domain: Forcefoundation.Catalog,
     data_layer: Ash.DataLayer.Ets,
     extensions: [
       AshPhoenix.Resource
