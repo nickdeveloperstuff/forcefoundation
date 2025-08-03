@@ -4965,6 +4965,9 @@ defmodule ForcefoundationWeb.Widgets.ButtonWidget do
   attr :data_source, :any, default: nil
   attr :confirm, :string, default: nil
   
+  # Allow additional attributes to be passed through
+  attr :rest, :global, include: ~w(phx-value-action phx-value-record-id)
+  
   slot :default
   slot :icon
   
@@ -4985,7 +4988,7 @@ defmodule ForcefoundationWeb.Widgets.ButtonWidget do
       phx-disable-with={@phx_disable_with}
       data-confirm={@confirm}
       title={@tooltip}
-      {@extra_attrs}
+      {@rest}
     >
       <%= if @debug_mode do %>
         <%= render_debug(assigns) %>
@@ -5131,13 +5134,13 @@ defmodule ForcefoundationWeb.Widgets.ButtonWidget do
       {:action, action, record} ->
         assigns
         |> assign(:on_click, "execute_action")
-        |> assign(:extra_attrs, [
+        |> assign(:rest, [
           "phx-value-action": action,
           "phx-value-record-id": record.id
         ])
       
       _ ->
-        assign(assigns, :extra_attrs, [])
+        assigns
     end
   end
 end
@@ -5200,7 +5203,7 @@ defmodule ForcefoundationWeb.Widgets.IconButtonWidget do
       |> Map.put(:label, nil)
       |> Map.put(:style, :ghost)
       |> Map.put(:default, [])
-      |> Map.put(:extra_attrs, [])
+      |> Map.put(:rest, [])
     
     ForcefoundationWeb.Widgets.ButtonWidget.render(button_assigns)
   end
@@ -7157,7 +7160,7 @@ defmodule ForcefoundationWeb.Widgets.Action.ContextMenuWidget do
         ]}
         phx-click="item_click"
         phx-value-action={item[:action]}
-        phx-target={@myself}
+        phx-target={@id}
       >
         <%= if item[:icon] do %>
           <.icon name={item.icon} class="w-4 h-4" />
@@ -7673,7 +7676,7 @@ defmodule ForcefoundationWeb.Widgets.Data.TableWidget do
               <%= length(@selected_rows) %> selected
             </span>
             <%= if length(@selected_rows) > 0 do %>
-              <button class="btn btn-ghost btn-xs" phx-click="clear_selection" phx-target={@myself}>
+              <button class="btn btn-ghost btn-xs" phx-click="clear_selection" phx-target={@id}>
                 Clear
               </button>
             <% end %>
@@ -7687,13 +7690,13 @@ defmodule ForcefoundationWeb.Widgets.Data.TableWidget do
               class="input input-bordered input-sm w-64"
               placeholder="Search..."
               phx-change="search"
-              phx-target={@myself}
+              phx-target={@id}
               value={@search_term}
             />
           <% end %>
           
           <%= if @exportable do %>
-            <button class="btn btn-ghost btn-sm" phx-click="export" phx-target={@myself}>
+            <button class="btn btn-ghost btn-sm" phx-click="export" phx-target={@id}>
               <.icon name="hero-arrow-down-tray" class="w-4 h-4" />
               Export
             </button>
@@ -7725,7 +7728,7 @@ defmodule ForcefoundationWeb.Widgets.Data.TableWidget do
                     class="checkbox checkbox-sm"
                     checked={all_selected?(assigns)}
                     phx-click="toggle_all"
-                    phx-target={@myself}
+                    phx-target={@id}
                   />
                 </th>
               <% end %>
@@ -7737,7 +7740,7 @@ defmodule ForcefoundationWeb.Widgets.Data.TableWidget do
                       class="flex items-center gap-1 hover:opacity-80"
                       phx-click="sort"
                       phx-value-field={column.field}
-                      phx-target={@myself}
+                      phx-target={@id}
                     >
                       <%= column.label %>
                       <%= render_sort_icon(column.field, assigns) %>
@@ -7772,7 +7775,7 @@ defmodule ForcefoundationWeb.Widgets.Data.TableWidget do
                         checked={row_selected?(row, assigns)}
                         phx-click="toggle_row"
                         phx-value-id={get_row_id(row, assigns)}
-                        phx-target={@myself}
+                        phx-target={@id}
                       />
                     </td>
                   <% end %>
@@ -7828,7 +7831,7 @@ defmodule ForcefoundationWeb.Widgets.Data.TableWidget do
               disabled={@current_page == 1}
               phx-click="page"
               phx-value-page={@current_page - 1}
-              phx-target={@myself}
+              phx-target={@id}
             >
               «
             </button>
@@ -7841,7 +7844,7 @@ defmodule ForcefoundationWeb.Widgets.Data.TableWidget do
                   class={["join-item btn btn-sm", page == @current_page && "btn-active"]}
                   phx-click="page"
                   phx-value-page={page}
-                  phx-target={@myself}
+                  phx-target={@id}
                 >
                   <%= page %>
                 </button>
@@ -7853,7 +7856,7 @@ defmodule ForcefoundationWeb.Widgets.Data.TableWidget do
               disabled={@current_page == @total_pages}
               phx-click="page"
               phx-value-page={@current_page + 1}
-              phx-target={@myself}
+              phx-target={@id}
             >
               »
             </button>
@@ -7862,7 +7865,7 @@ defmodule ForcefoundationWeb.Widgets.Data.TableWidget do
           <select
             class="select select-bordered select-sm"
             phx-change="page_size"
-            phx-target={@myself}
+            phx-target={@id}
           >
             <%= for size <- [10, 25, 50, 100] do %>
               <option value={size} selected={size == @page_size}>
@@ -8114,10 +8117,14 @@ defmodule ForcefoundationWeb.Widgets.Data.TableWidget do
   
   defp format_value(nil, _), do: "-"
   defp format_value(value, nil), do: to_string(value)
-  defp format_value(value, :date), do: Calendar.strftime(value, "%Y-%m-%d")
-  defp format_value(value, :datetime), do: Calendar.strftime(value, "%Y-%m-%d %H:%M")
-  defp format_value(value, :currency), do: "$#{:erlang.float_to_binary(value / 1, decimals: 2)}"
-  defp format_value(value, :percentage), do: "#{value}%"
+  defp format_value(%Date{} = value, :date), do: Date.to_string(value)
+  defp format_value(%DateTime{} = value, :datetime), do: 
+    value |> DateTime.to_naive() |> NaiveDateTime.to_string() |> String.slice(0..15)
+  defp format_value(%NaiveDateTime{} = value, :datetime), do: 
+    value |> NaiveDateTime.to_string() |> String.slice(0..15)
+  defp format_value(value, :currency) when is_number(value), do: 
+    "$#{:erlang.float_to_binary(value * 1.0, [decimals: 2])}"
+  defp format_value(value, :percentage) when is_number(value), do: "#{value}%"
   defp format_value(true, :boolean), do: "Yes"
   defp format_value(false, :boolean), do: "No"
   defp format_value(value, {:custom, func}), do: func.(value)
@@ -8815,7 +8822,7 @@ defmodule ForcefoundationWeb.Widgets.TableWidget do
                       class="checkbox checkbox-sm"
                       checked={all_selected?(assigns)}
                       phx-click="toggle_all"
-                      phx-target={@myself}
+                      phx-target={@id}
                     />
                   <% end %>
                 </th>
@@ -8881,7 +8888,7 @@ defmodule ForcefoundationWeb.Widgets.TableWidget do
                           checked={row_selected?(assigns, row)}
                           phx-click="toggle_selection"
                           phx-value-row-id={get_row_id(row)}
-                          phx-target={@myself}
+                          phx-target={@id}
                         />
                       </td>
                     <% end %>
@@ -9131,7 +9138,7 @@ defmodule ForcefoundationWeb.Widgets.TableWidget do
               value={@filters[column.field] || ""}
               phx-change="filter_change"
               phx-value-field={column.field}
-              phx-target={@myself}
+              phx-target={@id}
             />
           </div>
         <% end %>
@@ -9141,7 +9148,7 @@ defmodule ForcefoundationWeb.Widgets.TableWidget do
             <button
               class="btn btn-ghost btn-sm"
               phx-click="clear_filters"
-              phx-target={@myself}
+              phx-target={@id}
             >
               Clear Filters
             </button>
@@ -9167,7 +9174,7 @@ defmodule ForcefoundationWeb.Widgets.TableWidget do
           disabled={@current_page == 1}
           phx-click="change_page"
           phx-value-page={@current_page - 1}
-          phx-target={@myself}
+          phx-target={@id}
         >
           «
         </button>
@@ -9180,7 +9187,7 @@ defmodule ForcefoundationWeb.Widgets.TableWidget do
             ]}
             phx-click="change_page"
             phx-value-page={page}
-            phx-target={@myself}
+            phx-target={@id}
           >
             <%= page %>
           </button>
@@ -9191,7 +9198,7 @@ defmodule ForcefoundationWeb.Widgets.TableWidget do
           disabled={@current_page == @total_pages}
           phx-click="change_page"
           phx-value-page={@current_page + 1}
-          phx-target={@myself}
+          phx-target={@id}
         >
           »
         </button>
@@ -9774,7 +9781,7 @@ defmodule ForcefoundationWeb.Widgets.StreamableTableWidget do
                       type="checkbox"
                       class="checkbox checkbox-sm"
                       phx-click="toggle_all_stream"
-                      phx-target={@myself}
+                      phx-target={@id}
                     />
                   <% end %>
                 </th>
@@ -9810,7 +9817,7 @@ defmodule ForcefoundationWeb.Widgets.StreamableTableWidget do
                       checked={dom_id in @selected_rows}
                       phx-click="toggle_stream_selection"
                       phx-value-dom-id={dom_id}
-                      phx-target={@myself}
+                      phx-target={@id}
                     />
                   </td>
                 <% end %>
@@ -9910,7 +9917,7 @@ defmodule ForcefoundationWeb.Widgets.StreamableTableWidget do
             class={["btn btn-sm", action[:variant] || "btn-ghost"]}
             phx-click="bulk_action"
             phx-value-action={action.action}
-            phx-target={@myself}
+            phx-target={@id}
           >
             <%= if action[:icon] do %>
               <.icon name={action.icon} class="w-4 h-4" />
@@ -9922,7 +9929,7 @@ defmodule ForcefoundationWeb.Widgets.StreamableTableWidget do
         <button
           class="btn btn-sm btn-ghost"
           phx-click="clear_selection"
-          phx-target={@myself}
+          phx-target={@id}
         >
           Clear
         </button>
@@ -9941,7 +9948,7 @@ defmodule ForcefoundationWeb.Widgets.StreamableTableWidget do
       phx-blur="edit_cell"
       phx-value-dom-id={dom_id}
       phx-value-field={column.field}
-      phx-target={@myself}
+      phx-target={@id}
       data-original-value={field_value}
     >
       <%= field_value %>
@@ -10914,7 +10921,7 @@ defmodule ForcefoundationWeb.Widgets.Navigation.TabWidget do
             disabled={tab[:disabled]}
             phx-click="select_tab"
             phx-value-index={index}
-            phx-target={@myself}
+            phx-target={@id}
           >
             <%= if tab[:icon] do %>
               <.icon name={tab.icon} class="w-4 h-4" />
@@ -11539,7 +11546,7 @@ node test_navigation_widgets.js
 #### Common Errors & Solutions
 
 1. **"Tab content not updating"**
-   - Solution: Ensure phx-target={@myself} is set on tab buttons
+   - Solution: Ensure phx-target={@id} is set on tab buttons
 
 2. **"Active state not showing"**
    - Solution: Check current_path matches the item paths exactly
@@ -11817,7 +11824,7 @@ defmodule ForcefoundationWeb.Widgets.Feedback.ToastWidget do
               class="btn btn-ghost btn-xs"
               phx-click="dismiss_toast"
               phx-value-id={toast.id}
-              phx-target={@myself}
+              phx-target={@id}
             >
               <.icon name="hero-x-mark" class="w-4 h-4" />
             </button>
@@ -14886,7 +14893,7 @@ defmodule ForcefoundationWeb.Widgets.Data.RealtimeTableWidget do
                     class="checkbox"
                     checked={all_selected?(@data, @selected_ids)}
                     phx-click="toggle_all"
-                    phx-target={@myself}
+                    phx-target={@id}
                   />
                 </th>
               <% end %>
@@ -14896,7 +14903,7 @@ defmodule ForcefoundationWeb.Widgets.Data.RealtimeTableWidget do
                   class={[column[:class], @sortable && "cursor-pointer hover:bg-base-200"]}
                   phx-click={@sortable && "sort"}
                   phx-value-field={column.key}
-                  phx-target={@myself}
+                  phx-target={@id}
                 >
                   <div class="flex items-center gap-2">
                     <%= column.label %>
@@ -14938,7 +14945,7 @@ defmodule ForcefoundationWeb.Widgets.Data.RealtimeTableWidget do
                         checked={MapSet.member?(@selected_ids, row.id)}
                         phx-click="toggle_row"
                         phx-value-id={row.id}
-                        phx-target={@myself}
+                        phx-target={@id}
                       />
                     </td>
                   <% end %>
@@ -17026,7 +17033,7 @@ defmodule ForcefoundationWeb.Live.DebugController do
       <button
         class="btn btn-circle btn-primary"
         phx-click="toggle_debug_panel"
-        phx-target={@myself}
+        phx-target={@id}
         title="Debug Mode"
       >
         🐛
@@ -17041,7 +17048,7 @@ defmodule ForcefoundationWeb.Live.DebugController do
               type="checkbox"
               checked={@debug_enabled}
               phx-click="toggle_debug"
-              phx-target={@myself}
+              phx-target={@id}
             />
             Enable debug overlays
           </label>
@@ -17051,7 +17058,7 @@ defmodule ForcefoundationWeb.Live.DebugController do
               type="checkbox"
               checked={@show_performance}
               phx-click="toggle_performance"
-              phx-target={@myself}
+              phx-target={@id}
             />
             Show performance metrics
           </label>
@@ -17061,7 +17068,7 @@ defmodule ForcefoundationWeb.Live.DebugController do
               type="checkbox"
               checked={@show_connections}
               phx-click="toggle_connections"
-              phx-target={@myself}
+              phx-target={@id}
             />
             Show data connections
           </label>
@@ -17078,7 +17085,7 @@ defmodule ForcefoundationWeb.Live.DebugController do
             <button
               class="btn btn-sm btn-ghost w-full"
               phx-click="export_debug_info"
-              phx-target={@myself}
+              phx-target={@id}
             >
               Export Debug Info
             </button>
