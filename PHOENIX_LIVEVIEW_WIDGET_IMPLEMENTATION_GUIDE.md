@@ -595,10 +595,12 @@ defmodule ForcefoundationWeb.Widgets.ConnectionResolver do
   end
   
   # Resource resolution - direct Ash queries
-  defp resolve_resource(assigns, _socket, resource, opts) do
+  defp resolve_resource(assigns, socket, resource, opts) do
     query = build_query(resource, opts)
     
-    case Ash.read(query) do
+    domain = get_domain_from_socket(socket)
+    
+    case Ash.read(query, domain: domain) do
       {:ok, results} ->
         assigns
         |> Map.put(:data, results)
@@ -623,7 +625,8 @@ defmodule ForcefoundationWeb.Widgets.ConnectionResolver do
   
   # Form resolution - creates AshPhoenix.Form
   defp resolve_form(assigns, socket, {:create, resource}) do
-    form = AshPhoenix.Form.for_create(resource, :create)
+    domain = get_domain_from_socket(socket)
+    form = AshPhoenix.Form.for_create(resource, :create, domain: domain)
     
     assigns
     |> Map.put(:form, form)
@@ -631,7 +634,8 @@ defmodule ForcefoundationWeb.Widgets.ConnectionResolver do
   end
   
   defp resolve_form(assigns, socket, {:update, record}) do
-    form = AshPhoenix.Form.for_update(record, :update)
+    domain = get_domain_from_socket(socket)
+    form = AshPhoenix.Form.for_update(record, :update, domain: domain)
     
     assigns
     |> Map.put(:form, form)
@@ -6454,7 +6458,8 @@ defmodule ForcefoundationWeb.ActionButtonTestLive do
   end
   
   def handle_event("refresh_posts", _, socket) do
-    {:ok, posts} = Post |> Ash.Query.sort(inserted_at: :desc) |> Ash.read()
+    domain = socket.assigns[:domain] || MyApp.Domain
+    {:ok, posts} = Post |> Ash.Query.sort(inserted_at: :desc) |> Ash.read(domain: domain)
     {:noreply, assign(socket, :posts, posts)}
   end
   
@@ -12973,10 +12978,11 @@ defmodule ForcefoundationWeb.Widgets.ConnectionResolver do
   def resolve({:form, action}, params, socket) do
     resource = params[:resource] || raise "Resource required for form connection"
     
+    domain = get_domain_module(socket)
     form = 
       case params[:data] do
-        nil -> AshPhoenix.Form.for_create(resource, action)
-        data -> AshPhoenix.Form.for_update(data, action)
+        nil -> AshPhoenix.Form.for_create(resource, action, domain: domain)
+        data -> AshPhoenix.Form.for_update(data, action, domain: domain)
       end
     
     {:ok, form}
@@ -12988,7 +12994,7 @@ defmodule ForcefoundationWeb.Widgets.ConnectionResolver do
       action: action,
       record: record,
       params: params,
-      api: get_api_module(socket)
+      domain: get_domain_module(socket)
     }}
   end
   
@@ -13010,10 +13016,6 @@ defmodule ForcefoundationWeb.Widgets.ConnectionResolver do
   
   defp get_domain_module(socket) do
     socket.assigns[:domain] || socket.assigns[:context]
-  end
-  
-  defp get_api_module(socket) do
-    socket.assigns[:api] || socket.assigns[:domain]
   end
   
   defp resolve_interface_call(module, function, params, socket) do
@@ -14269,7 +14271,7 @@ defmodule ForcefoundationWeb.AshFormTestLive do
   
   def handle_event("edit", %{"id" => id}, socket) do
     product = Catalog.get!(Product, id)
-    form = AshPhoenix.Form.for_update(product, :update, api: Catalog)
+    form = AshPhoenix.Form.for_update(product, :update, domain: Catalog)
     
     socket =
       socket
@@ -14375,7 +14377,7 @@ defmodule ForcefoundationWeb.AshFormTestLive do
   end
   
   defp assign_new_form(socket) do
-    form = AshPhoenix.Form.for_create(Product, :create, api: Catalog)
+    form = AshPhoenix.Form.for_create(Product, :create, domain: Catalog)
     assign(socket, :create_form, form)
   end
   
@@ -14451,7 +14453,7 @@ IO.inspect(products)
 {:ok, updated} = Catalog.update(product, %{price: 24.99})
 
 # Test form creation
-form = AshPhoenix.Form.for_create(Product, :create, api: Catalog)
+form = AshPhoenix.Form.for_create(Product, :create, domain: Catalog)
 IO.inspect(form)
 
 # Test form validation
@@ -17545,8 +17547,8 @@ defmodule ForcefoundationWeb.Widgets.ConnectionResolver do
   end
   
   defp run_resource_query(query, assigns) do
-    api = assigns[:api] || MyApp.Api
-    Ash.read(query, api: api)
+    domain = assigns[:domain] || MyApp.Domain
+    Ash.read(query, domain: domain)
   end
   
   defp subscribe_to_topic(topic, assigns) do
