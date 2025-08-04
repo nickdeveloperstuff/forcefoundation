@@ -51,6 +51,9 @@ defmodule ForcefoundationWeb do
   def live_view do
     quote do
       use Phoenix.LiveView
+      
+      # Import all widgets
+      use ForcefoundationWeb.Widgets
 
       unquote(html_helpers())
     end
@@ -59,6 +62,9 @@ defmodule ForcefoundationWeb do
   def live_component do
     quote do
       use Phoenix.LiveComponent
+      
+      # Import all widgets
+      use ForcefoundationWeb.Widgets
 
       unquote(html_helpers())
     end
@@ -67,6 +73,9 @@ defmodule ForcefoundationWeb do
   def html do
     quote do
       use Phoenix.Component
+      
+      # Import all widgets
+      use ForcefoundationWeb.Widgets
 
       # Import convenience functions from controllers
       import Phoenix.Controller,

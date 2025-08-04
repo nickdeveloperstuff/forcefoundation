@@ -36,6 +36,10 @@ defmodule ForcefoundationWeb.Router do
       # If an authenticated user must *not* be present:
       # on_mount {ForcefoundationWeb.LiveUserAuth, :live_no_user}
     end
+    
+    # Test routes for widget development
+    live "/test/widgets", WidgetTestLive
+    live "/test/connections", ConnectionTestLive
   end
 
   scope "/", ForcefoundationWeb do
