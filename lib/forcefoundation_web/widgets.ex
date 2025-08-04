@@ -47,6 +47,7 @@ defmodule ForcefoundationWeb.Widgets do
       
       # Data widgets
       import ForcefoundationWeb.Widgets.Data.TableWidget
+      import ForcefoundationWeb.Widgets.StreamableTableWidget
       
       # Test widgets
       import ForcefoundationWeb.Widgets.TestWidget

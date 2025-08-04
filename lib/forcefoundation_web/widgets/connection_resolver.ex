@@ -53,12 +53,29 @@ defmodule ForcefoundationWeb.Widgets.ConnectionResolver do
     end
   end
   
-  def resolve({:stream, topic}, socket) do
+  def resolve({:stream, stream_name}, socket) do
     # Subscribe to PubSub topic
-    Phoenix.PubSub.subscribe(Forcefoundation.PubSub, topic)
+    Phoenix.PubSub.subscribe(Forcefoundation.PubSub, stream_name)
     
     # Store subscription info in socket
-    socket = update_assigns(socket, :__widget_stream__, topic)
+    socket = socket
+      |> update_assigns(:__widget_stream__, stream_name)
+      |> update_assigns(:stream_name, stream_name)
+      |> update_assigns(:stream_connected, true)
+    
+    {:ok, nil, socket}
+  end
+  
+  def resolve({:stream, stream_name, opts}, socket) do
+    # Subscribe to PubSub topic
+    Phoenix.PubSub.subscribe(Forcefoundation.PubSub, stream_name)
+    
+    # Store subscription info in socket with options
+    socket = socket
+      |> update_assigns(:__widget_stream__, stream_name)
+      |> update_assigns(:stream_name, stream_name)
+      |> update_assigns(:stream_opts, opts)
+      |> update_assigns(:stream_connected, true)
     
     {:ok, nil, socket}
   end

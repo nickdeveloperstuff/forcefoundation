@@ -49,6 +49,7 @@ defmodule ForcefoundationWeb.Router do
     live "/test/action-buttons", ActionButtonTestLive
     live "/test/additional-actions", AdditionalActionTestLive
     live "/test/table", Test.TableWidgetTestLive
+    live "/test/stream-table", StreamTableTestLive
   end
 
   scope "/", ForcefoundationWeb do
