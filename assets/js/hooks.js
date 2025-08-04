@@ -264,10 +264,66 @@ export const ContextMenu = {
   }
 };
 
+// Table Widget Hook for CSV export
+export const TableWidget = {
+  mounted() {
+    // Listen for export event
+    this.handleEvent("export_csv", ({data, filename}) => {
+      this.exportToCSV(data, filename);
+    });
+  },
+  
+  exportToCSV(data, filename = "table_export.csv") {
+    if (!data || !data.rows || !data.columns) {
+      console.error("Invalid data for CSV export");
+      return;
+    }
+    
+    // Build CSV content
+    let csv = "";
+    
+    // Add headers
+    const headers = data.columns.map(col => this.escapeCSV(col.label || col.field));
+    csv += headers.join(",") + "\n";
+    
+    // Add rows
+    data.rows.forEach(row => {
+      const values = data.columns.map(col => {
+        const value = row[col.field] || "";
+        return this.escapeCSV(String(value));
+      });
+      csv += values.join(",") + "\n";
+    });
+    
+    // Create blob and download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    
+    if (navigator.msSaveBlob) { // IE 10+
+      navigator.msSaveBlob(blob, filename);
+    } else {
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+  },
+  
+  escapeCSV(str) {
+    if (str == null) return "";
+    str = String(str);
+    if (str.includes(",") || str.includes("\n") || str.includes('"')) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  }
+};
+
 // Export all hooks
 export default {
   Sortable,
   ConfirmDialog,
   ConfirmDialogModal,
-  ContextMenu
+  ContextMenu,
+  TableWidget
 };

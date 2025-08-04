@@ -45,6 +45,9 @@ defmodule ForcefoundationWeb.Widgets do
       import ForcefoundationWeb.Widgets.Action.ToolbarWidget
       import ForcefoundationWeb.Widgets.Action.ContextMenuWidget
       
+      # Data widgets
+      import ForcefoundationWeb.Widgets.Data.TableWidget
+      
       # Test widgets
       import ForcefoundationWeb.Widgets.TestWidget
       import ForcefoundationWeb.Widgets.ConnectionTestWidget
