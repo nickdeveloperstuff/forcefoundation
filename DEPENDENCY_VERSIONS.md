@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project uses exact version locking for all dependencies to ensure fully reproducible builds across all environments. All dependencies in `mix.exs` are specified with the `==` operator instead of version ranges.
+This project uses exact version locking for ALL dependencies to ensure fully reproducible builds across all environments. All dependencies in `mix.exs` are specified with the `==` operator instead of version ranges. The Elixir version is also locked to ensure complete reproducibility.
 
 ## Purpose
 
@@ -11,12 +11,21 @@ This project uses exact version locking for all dependencies to ensure fully rep
 - **Predictability**: Dependencies won't change unless explicitly updated
 - **Security**: Controlled update process allows for proper testing before adopting new versions
 
+## IMPORTANT: Version Lock Status
+
+**This project is FROZEN as of August 2025**
+- **Elixir**: Locked to exact version 1.18.4
+- **All dependencies**: Locked to exact versions
+- **mix.lock**: Contains cryptographic hashes of all dependencies
+
 ## Current Locked Dependencies
 
-All dependencies have been locked to their exact versions as of the last update:
+All dependencies have been locked to their exact versions as captured in mix.lock:
+
+### Language Version
+- **Elixir**: == 1.18.4
 
 ### Core Dependencies
-- **Elixir**: == 1.15.0
 - **ash**: == 3.5.33
 - **phoenix**: == 1.8.0-rc.4 (override: true)
 - **ecto_sql**: == 3.13.2
@@ -66,7 +75,39 @@ All dependencies have been locked to their exact versions as of the last update:
 - **tidewave**: == 0.2.0 (only: [:dev])
 - **usage_rules**: == 0.1.23
 
+### Transitive Dependencies (managed by mix.lock)
+The following dependencies are automatically installed as requirements of the above:
+- ash_json_api, ash_sql, assent, castore, cc_precompiler, circular_buffer, comeonin, conv_case
+- db_connection, decimal, ecto, elixir_make, ets, expo, file_system, finch, fine, glob_ex
+- hpax, iterex, joken, jose, json_xema, langchain, libgraph, mime, mint, nimble_options
+- nimble_pool, open_api_spex, owl, phoenix_html_helpers, phoenix_pubsub, phoenix_template
+- phoenix_view, plug, plug_crypto, reactor, rewrite, slugify, spark, spitfire, splode
+- stream_data, telemetry, text_diff, thousand_island, websock, websock_adapter, xema
+- yamerl, yaml_elixir, ymlr
+
+## How to Set Up This Project
+
+1. **Install exact Elixir version**:
+   ```bash
+   # Using asdf
+   asdf install elixir 1.18.4
+   asdf local elixir 1.18.4
+   
+   # Or using other version managers
+   # Make sure `elixir --version` shows 1.18.4
+   ```
+
+2. **Clone and setup**:
+   ```bash
+   git clone <repository>
+   cd forcefoundation
+   mix deps.get
+   mix setup
+   ```
+
 ## How to Update Dependencies
+
+⚠️ **WARNING**: This project is intentionally frozen. Only update dependencies if absolutely necessary (e.g., critical security fixes).
 
 When you need to update a dependency, follow these steps:
 
@@ -94,7 +135,7 @@ When you need to update a dependency, follow these steps:
 
 5. **Update this documentation** with the new version number
 
-6. **Commit both files**:
+6. **Commit all files**:
    ```bash
    git add mix.exs mix.lock DEPENDENCY_VERSIONS.md
    git commit -m "Update [dependency_name] to version X.Y.Z"
@@ -102,11 +143,28 @@ When you need to update a dependency, follow these steps:
 
 ## Important Notes
 
-- The `mix.lock` file still exists and provides additional verification of exact versions
+- The `mix.lock` file provides cryptographic verification of exact versions
 - Git-based dependencies (like heroicons) remain pinned to specific tags/commits
 - Development and test-only dependencies are still marked with their appropriate environments
 - Runtime conditions for build tools (esbuild, tailwind) are preserved
+- The project will NOT accept any Elixir version other than 1.18.4
+
+## Troubleshooting
+
+### "Elixir version mismatch" error
+- Install exactly Elixir 1.18.4 using your version manager
+- Do NOT change the Elixir version requirement in mix.exs
+
+### Dependency conflicts
+- Run `mix deps.clean --all && mix deps.get`
+- Ensure no one has modified mix.exs or mix.lock
+
+### Build failures
+- Verify your Elixir version: `elixir --version` should show 1.18.4
+- Check that mix.lock hasn't been modified
+- Try `rm -rf _build deps && mix deps.get && mix setup`
 
 ## Version History
 
+- **August 2025**: Project frozen with Elixir 1.18.4 and all exact dependency versions
 - **Initial Lock**: All dependencies locked to exact versions as found in mix.lock
