@@ -24,8 +24,15 @@ defmodule ForcefoundationWeb.Widgets do
       import ForcefoundationWeb.Widgets.BadgeWidget
       
       # Form widgets
-      # import ForcefoundationWeb.Widgets.FormWidget
-      # import ForcefoundationWeb.Widgets.InputWidget
+      import ForcefoundationWeb.Widgets.FormWidget
+      import ForcefoundationWeb.Widgets.InputWidget
+      import ForcefoundationWeb.Widgets.SelectWidget
+      import ForcefoundationWeb.Widgets.CheckboxWidget
+      import ForcefoundationWeb.Widgets.RadioWidget
+      import ForcefoundationWeb.Widgets.TextareaWidget
+      import ForcefoundationWeb.Widgets.NestedFormWidget
+      import ForcefoundationWeb.Widgets.FieldsetWidget
+      import ForcefoundationWeb.Widgets.RepeaterWidget
       
       # Test widgets
       import ForcefoundationWeb.Widgets.TestWidget

@@ -1,0 +1,377 @@
+/* Widget System Styles */
+
+/* Form Widget Styles */
+.widget-form {
+  @apply w-full;
+}
+
+/* Form Variants */
+.form-default {
+  @apply space-y-4;
+}
+
+.form-inline {
+  @apply flex flex-wrap items-end gap-4;
+}
+
+.form-floating {
+  @apply space-y-6;
+}
+
+/* Form States */
+.form-loading {
+  @apply opacity-75 pointer-events-none;
+}
+
+.form-disabled {
+  @apply opacity-50 pointer-events-none;
+  
+  input,
+  select,
+  textarea,
+  button {
+    @apply cursor-not-allowed;
+  }
+}
+
+.form-has-errors {
+  @apply relative;
+}
+
+/* Form Sections */
+.form-header {
+  @apply mb-6 pb-4 border-b border-gray-200;
+}
+
+.form-footer {
+  @apply mt-6 pt-4 border-t border-gray-200;
+}
+
+.form-actions {
+  @apply flex gap-2 items-center;
+}
+
+/* Form Content */
+.form-content {
+  @apply space-y-4;
+}
+
+/* Loading State Animation */
+.form-loading::after {
+  content: "";
+  @apply absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center;
+}
+
+/* Error List Styling */
+.form-error-list {
+  @apply space-y-1 text-sm;
+}
+
+/* Responsive Form Layouts */
+@media (max-width: 640px) {
+  .form-inline {
+    @apply flex-col items-stretch;
+  }
+  
+  .form-inline .form-actions {
+    @apply w-full mt-4;
+  }
+  
+  .form-inline .form-actions button {
+    @apply w-full;
+  }
+}
+
+/* Input Widget Styles */
+.widget-input {
+  @apply w-full;
+}
+
+.widget-input .input-group {
+  @apply join w-full;
+}
+
+.widget-input .input-group > * {
+  @apply join-item;
+}
+
+.widget-input .input-addon {
+  @apply flex items-center px-3 bg-base-200 border border-base-300;
+}
+
+.widget-input .input-addon-start {
+  @apply rounded-l-btn border-r-0;
+}
+
+.widget-input .input-addon-end {
+  @apply rounded-r-btn border-l-0;
+}
+
+/* Floating Label Input */
+.widget-input.floating-label {
+  @apply relative;
+}
+
+.widget-input.floating-label .floating-label-text {
+  @apply absolute left-3 transition-all duration-200 pointer-events-none;
+  @apply text-base-content/60;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.widget-input.floating-label input:focus ~ .floating-label-text,
+.widget-input.floating-label input:not(:placeholder-shown) ~ .floating-label-text {
+  @apply text-xs;
+  top: -0.5rem;
+  transform: translateY(0);
+  @apply bg-base-100 px-1;
+}
+
+/* Select Widget Styles */
+.widget-select {
+  @apply w-full;
+}
+
+.widget-select select[multiple] {
+  @apply h-auto py-2;
+}
+
+/* Checkbox Widget Styles */
+.widget-checkbox {
+  @apply w-full;
+}
+
+.widget-checkbox .label {
+  @apply w-auto;
+}
+
+/* Radio Widget Styles */
+.widget-radio {
+  @apply w-full;
+}
+
+.widget-radio .radio-group {
+  @apply w-full;
+}
+
+/* Textarea Widget Styles */
+.widget-textarea {
+  @apply w-full;
+}
+
+.widget-textarea .label-text-alt {
+  @apply text-xs;
+}
+
+/* Character Counter */
+.widget-textarea .label .label-text-alt:last-child {
+  @apply tabular-nums;
+}
+
+/* Input Error States */
+.widget-input .input-error,
+.widget-select .select-error,
+.widget-checkbox .checkbox-error,
+.widget-radio .radio-error,
+.widget-textarea .textarea-error {
+  @apply border-error;
+}
+
+/* Input Focus States */
+.widget-input input:focus,
+.widget-select select:focus,
+.widget-textarea textarea:focus {
+  @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-base-100;
+}
+
+/* Input Disabled States */
+.widget-input input:disabled,
+.widget-select select:disabled,
+.widget-checkbox input:disabled,
+.widget-radio input:disabled,
+.widget-textarea textarea:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Input Group Styling */
+.input-group .input {
+  @apply rounded-none;
+}
+
+.input-group .input:first-child {
+  @apply rounded-l-btn;
+}
+
+.input-group .input:last-child {
+  @apply rounded-r-btn;
+}
+
+/* Form Control Spacing */
+.form-control + .form-control {
+  @apply mt-4;
+}
+
+/* Inline Form Adjustments */
+.form-inline .form-control {
+  @apply mt-0;
+}
+
+/* Help Text and Error Message Styling */
+.label-text-alt {
+  @apply text-xs opacity-70;
+}
+
+.label-text-alt.text-error {
+  @apply opacity-100;
+}
+
+/* Required Field Indicator */
+.label-text[required]::after,
+.label-text.required::after {
+  content: " *";
+  @apply text-error;
+}
+
+/* Nested Form Widget Styles */
+.widget-nested-form {
+  @apply space-y-4;
+}
+
+.nested-form-items {
+  @apply space-y-3;
+}
+
+.nested-form-item {
+  @apply relative p-4 bg-base-100 border border-base-300 rounded-lg;
+  @apply flex gap-4 items-start;
+}
+
+.nested-form-item.sortable-item {
+  @apply cursor-move;
+}
+
+.nested-form-item.dragging {
+  @apply opacity-50;
+}
+
+.sortable-handle {
+  @apply flex items-center justify-center w-8 h-8 cursor-move;
+  @apply text-base-content/50 hover:text-base-content/70;
+}
+
+.nested-form-content {
+  @apply flex-1;
+}
+
+.nested-form-empty {
+  @apply text-center py-8 text-base-content/60;
+}
+
+.nested-form-actions {
+  @apply mt-4;
+}
+
+/* Fieldset Widget Styles */
+.widget-fieldset {
+  @apply border-0 p-0;
+}
+
+.fieldset-legend {
+  @apply text-lg font-semibold mb-4 w-full;
+}
+
+.fieldset-legend-text {
+  @apply inline-block;
+}
+
+.fieldset-legend-collapsible {
+  @apply cursor-pointer;
+}
+
+.fieldset-toggle {
+  @apply flex items-center justify-between w-full text-left;
+  @apply hover:text-primary transition-colors;
+}
+
+.fieldset-toggle-icon {
+  @apply transition-transform duration-200;
+}
+
+.collapsed .fieldset-toggle-icon {
+  @apply -rotate-90;
+}
+
+.fieldset-description {
+  @apply text-sm text-base-content/70 mb-4;
+}
+
+.fieldset-content {
+  @apply space-y-4;
+}
+
+.fieldset-fields {
+  @apply space-y-4;
+}
+
+.fieldset-actions {
+  @apply mt-6 pt-4 border-t border-base-200;
+}
+
+/* Fieldset Variants */
+.fieldset-bordered {
+  @apply border border-base-300 rounded-lg p-6;
+}
+
+.fieldset-bordered .fieldset-legend {
+  @apply -mt-3 bg-base-100 px-2;
+}
+
+.fieldset-separated {
+  @apply border-t border-base-200 pt-6;
+}
+
+.fieldset-separated:first-child {
+  @apply border-t-0 pt-0;
+}
+
+/* Repeater Widget Styles */
+.widget-repeater {
+  @apply space-y-4;
+}
+
+.repeater-items {
+  @apply space-y-2;
+}
+
+.repeater-item {
+  @apply flex gap-2 items-center;
+}
+
+.repeater-item.sortable-item {
+  @apply cursor-move;
+}
+
+.repeater-item-content {
+  @apply flex-1;
+}
+
+.repeater-empty {
+  @apply text-center py-4 text-base-content/60;
+}
+
+.repeater-actions {
+  @apply mt-4;
+}
+
+/* Sortable Styles */
+.sortable-container {
+  @apply relative;
+}
+
+.sortable-item {
+  @apply transition-transform duration-200;
+}
+
+.sortable-placeholder {
+  @apply bg-base-200 border-2 border-dashed border-base-300;
+}

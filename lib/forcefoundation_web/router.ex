@@ -43,6 +43,8 @@ defmodule ForcefoundationWeb.Router do
     live "/test/layout", LayoutTestLive
     live "/test/cards", CardTestLive
     live "/test/display", DisplayTestLive
+    live "/test/forms", FormTestLive
+    live "/test/nested-forms", NestedFormTestLive
   end
 
   scope "/", ForcefoundationWeb do
