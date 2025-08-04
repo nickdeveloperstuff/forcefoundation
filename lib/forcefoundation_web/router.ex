@@ -46,6 +46,8 @@ defmodule ForcefoundationWeb.Router do
     live "/test/forms", FormTestLive
     live "/test/nested-forms", NestedFormTestLive
     live "/test/buttons", ButtonTestLive
+    live "/test/action-buttons", ActionButtonTestLive
+    live "/test/additional-actions", AdditionalActionTestLive
   end
 
   scope "/", ForcefoundationWeb do

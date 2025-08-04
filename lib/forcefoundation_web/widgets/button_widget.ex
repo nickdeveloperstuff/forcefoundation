@@ -65,6 +65,9 @@ defmodule ForcefoundationWeb.Widgets.ButtonWidget do
   # Include common widget attributes (loading already included)
   widget_attrs()
   
+  # Allow arbitrary HTML attributes
+  attr :rest, :global, include: ~w(phx-click phx-value-*)
+  
   # Slots
   slot :inner_block
   slot :icon_slot
@@ -88,6 +91,7 @@ defmodule ForcefoundationWeb.Widgets.ButtonWidget do
       phx-value-type={@phx_value_type}
       data-confirm={@confirm}
       title={@tooltip}
+      {@rest}
     >
       <%= Phoenix.HTML.raw(render_debug(assigns)) %>
       

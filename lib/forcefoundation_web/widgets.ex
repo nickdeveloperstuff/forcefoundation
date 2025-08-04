@@ -39,6 +39,11 @@ defmodule ForcefoundationWeb.Widgets do
       import ForcefoundationWeb.Widgets.IconButtonWidget
       import ForcefoundationWeb.Widgets.ButtonGroupWidget
       import ForcefoundationWeb.Widgets.DropdownButtonWidget
+      import ForcefoundationWeb.Widgets.ActionButtonWidget
+      import ForcefoundationWeb.Widgets.ConfirmDialogWidget
+      import ForcefoundationWeb.Widgets.Action.DropdownWidget
+      import ForcefoundationWeb.Widgets.Action.ToolbarWidget
+      import ForcefoundationWeb.Widgets.Action.ContextMenuWidget
       
       # Test widgets
       import ForcefoundationWeb.Widgets.TestWidget
