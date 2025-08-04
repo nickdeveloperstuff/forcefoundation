@@ -34,6 +34,12 @@ defmodule ForcefoundationWeb.Widgets do
       import ForcefoundationWeb.Widgets.FieldsetWidget
       import ForcefoundationWeb.Widgets.RepeaterWidget
       
+      # Action widgets
+      import ForcefoundationWeb.Widgets.ButtonWidget
+      import ForcefoundationWeb.Widgets.IconButtonWidget
+      import ForcefoundationWeb.Widgets.ButtonGroupWidget
+      import ForcefoundationWeb.Widgets.DropdownButtonWidget
+      
       # Test widgets
       import ForcefoundationWeb.Widgets.TestWidget
       import ForcefoundationWeb.Widgets.ConnectionTestWidget
