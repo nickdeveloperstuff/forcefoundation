@@ -40,6 +40,9 @@ defmodule ForcefoundationWeb.Router do
     # Test routes for widget development
     live "/test/widgets", WidgetTestLive
     live "/test/connections", ConnectionTestLive
+    live "/test/layout", LayoutTestLive
+    live "/test/cards", CardTestLive
+    live "/test/display", DisplayTestLive
   end
 
   scope "/", ForcefoundationWeb do

@@ -12,15 +12,16 @@ defmodule ForcefoundationWeb.Widgets do
   # This will grow as we add more widgets
   defmacro __using__(_opts) do
     quote do
-      # Foundation widgets (we'll create these next)
-      # import ForcefoundationWeb.Widgets.GridWidget
-      # import ForcefoundationWeb.Widgets.FlexWidget
-      # import ForcefoundationWeb.Widgets.SectionWidget
+      # Foundation widgets
+      import ForcefoundationWeb.Widgets.GridWidget
+      import ForcefoundationWeb.Widgets.FlexWidget
+      import ForcefoundationWeb.Widgets.SectionWidget
       
       # Display widgets
-      # import ForcefoundationWeb.Widgets.TextWidget
-      # import ForcefoundationWeb.Widgets.HeadingWidget
-      # import ForcefoundationWeb.Widgets.CardWidget
+      import ForcefoundationWeb.Widgets.TextWidget
+      import ForcefoundationWeb.Widgets.HeadingWidget
+      import ForcefoundationWeb.Widgets.CardWidget
+      import ForcefoundationWeb.Widgets.BadgeWidget
       
       # Form widgets
       # import ForcefoundationWeb.Widgets.FormWidget
